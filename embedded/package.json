@@ -1,0 +1,17 @@
+{
+  "name": "NodejsConsoleApp1",
+  "version": "0.0.0",
+  "description": "NodejsConsoleApp1",
+  "main": "app.js",
+  "author": {
+    "name": "micha",
+    "email": ""
+  },
+  "dependencies": {
+    "bleno": "^0.3.3",
+    "eddystone-beacon": "^1.0.5",
+    "forever": "^0.15.1",
+    "mraa": "^0.9.0",
+    "rpio": "^0.9.6"
+  }
+}
