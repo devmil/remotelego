@@ -7,14 +7,14 @@ hciconfig hci1 down
 hciconfig hci1 up
 
 # Unexport all gpios
-gpioDirRegex='^/sys/class/gpio/gpio([0-9][0-9]?)$'
-
-for d in /sys/class/gpio/*; do 
-    if [[ $d =~ $gpioDirRegex ]]; then
-        num=${BASH_REMATCH[1]}
-        echo $num > /sys/class/gpio/unexport
-    fi
-done
+# gpioDirRegex='^/sys/class/gpio/gpio([0-9][0-9]?[0-9]?)$'
+# 
+# for d in /sys/class/gpio/*; do 
+#     if [[ $d =~ $gpioDirRegex ]]; then
+#         num=${BASH_REMATCH[1]}
+#         echo $num > /sys/class/gpio/unexport
+#     fi
+# done
 
 # Launch the app
 node_modules/forever/bin/forever stopall
@@ -30,6 +30,6 @@ fi
 if [ "$ip" == "" ]; then
     echo "No IP found! Didn't start debugging"
 else
-    node-inspector --web-host $ip app.js
+    node-inspector --web-host $ip simple.js
 fi
 

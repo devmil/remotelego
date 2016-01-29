@@ -8,7 +8,7 @@ function advertiseEddyStone() {
         tlmCount: 2,
         tlmPeriod: 100 // every 100 advertisements => every 10 seconds (doesn't get used here)
     };
-    var url = 'https://goo.gl/2uYtBd'; //TODO: echange with the legot remote app URL
+    var url = 'https://goo.gl/2uYtBd'; //TODO: echange with the lego remote app URL
     eddystoneBeacon.advertiseUrl(url, eddyStoneOptions);
 }
 function potentiallyDelayedStart() {

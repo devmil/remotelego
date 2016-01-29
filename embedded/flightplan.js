@@ -1,65 +1,31 @@
 var plan = require('flightplan');
+var params = require('./flightplan_params');
 
 // configuration
-plan.target('staging', {
-  host: 'raspberrypi-2-wifi',
-  username: 'pi',
-  password: 'raspberry',
+plan.target('raspberrypi-2-wifi', {
+  host: params.FlightplanParameters.getRaspberryPi2WifiParameters().getHost(),
+  username: params.FlightplanParameters.getRaspberryPi2WifiParameters().getUserName(),
+  password: params.FlightplanParameters.getRaspberryPi2WifiParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: 'pi'    
+  FileOwnerName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getUserName()
 });
 
-plan.target('staging_wired', {
-  host: 'raspberrypi-2',
-  username: 'pi',
-  password: 'raspberry',
+plan.target('edison', {
+  host: params.FlightplanParameters.getEdisonParameters().getHost(),
+  username: params.FlightplanParameters.getEdisonParameters().getUserName(),
+  password: params.FlightplanParameters.getEdisonParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: 'pi'    
+  FileOwnerName: params.FlightplanParameters.getEdisonParameters().getUserName()
 });
 
-plan.target('staging_flo', {
-  host: 'fexdevpi',
-  username: 'pi',
-  password: 'raspberry',
-  agent: process.env.SSH_AUTH_SOCK,
-}, {
-  FileOwnerName: 'pi'    
-});
-
-plan.target('staging_v1', {
-  host: 'raspberrypi-1-wifi',
-  username: 'pi',
-  password: 'raspberry',
-  agent: process.env.SSH_AUTH_SOCK,
-}, {
-  FileOwnerName: 'pi'    
-});
-
-plan.target('staging_v1_wired', {
-  host: 'raspberrypi-1',
-  username: 'pi',
-  password: 'raspberry',
-  agent: process.env.SSH_AUTH_SOCK,
-}, {
-  FileOwnerName: 'pi'    
-});
-
-plan.target('edison_wifi', {
-  host: 'edison',
-  username: 'root',
-  password: 'edisonedison',
-  agent: process.env.SSH_AUTH_SOCK,
-}, {
-  FileOwnerName: 'pi'    
-});
-
-var tmpDir = 'raspberry-led-' + new Date().getTime();
+var tmpDir = 'raspberry-legotruck-' + new Date().getTime();
 
 // run commands on localhost
 plan.local(function(local) {
   local.log('Run build');
+  local.exec('tsc');
 
   local.log('Copy files to remote hosts');
   var filesToCopy = local.exec('git ls-files', {silent: true});
@@ -69,12 +35,12 @@ plan.local(function(local) {
 
 // run commands on the target's remote hosts
 plan.remote(function(remote) {
-    remote.log('Deleting led content');
+    remote.log('Deleting legotruck content');
     remote.exec('mkdir -p ~/apps');
-    remote.exec('mkdir -p ~/apps/led');
-    remote.exec('mkdir -p ~/apps/led/dummy');
+    remote.exec('mkdir -p ~/apps/legotruck');
+    remote.exec('mkdir -p ~/apps/legotruck/dummy');
     
-    var filesOut = remote.exec('find ~/apps/led/ -type f -maxdepth 1').stdout;
+    var filesOut = remote.exec('find ~/apps/legotruck/ -type f -maxdepth 1').stdout;
     if(filesOut != null) { 
         var files = filesOut.split('\n');
         files.forEach(function(file) {
@@ -84,7 +50,7 @@ plan.remote(function(remote) {
         });
     }
     
-    var directoriesOut = remote.exec('ls -d ~/apps/led/*/').stdout;
+    var directoriesOut = remote.exec('ls -d ~/apps/legotruck/*/').stdout;
     if(directoriesOut != null) {
     var directories = directoriesOut.split('\n');
         directories.forEach(function(dir) {
@@ -97,8 +63,8 @@ plan.remote(function(remote) {
     } 
 
     remote.log('Move folder to app root');
-    remote.sudo('cp -R ~/tmp/' + tmpDir + '/. ~/apps/led/', {user: plan.runtime.options.FileOwnerName});
+    remote.sudo('cp -R ~/tmp/' + tmpDir + '/. ~/apps/legotruck/', {user: plan.runtime.options.FileOwnerName});
     remote.rm('-rf ~/tmp/' + tmpDir);
     //install module dependencies
-    remote.exec('cd ~/apps/led; npm update');
+    remote.exec('cd ~/apps/legotruck; npm update');
 });

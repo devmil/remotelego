@@ -1,0 +1,52 @@
+var pa = require('./peripherals/raspberry/RaspPeripheralAccess');
+var mod = require('./model/CarModel');
+var bt = require('./bluetooth/BluetoothHandler');
+var peripheralAccess = new pa.RaspPeripheralAccess();
+var carModel = new mod.CarModel(peripheralAccess, 12, //motor speed pin (pwm)
+15, //motor direction
+14, //motor enable
+13, //servo control pwm
+40000, //motor pwm frequency
+44, //led front
+45, //led back
+46, //led state red
+47, //led state green
+48 //led state blue
+);
+carModel.setSteering(0);
+carModel.setMotorSpeed(0);
+var btHandler = new bt.BluetoothHandler(carModel, carModel);
+// var currentState: number = 1;
+// 
+// setInterval(() => {
+//     if(currentState > 6) {
+//         currentState = 1;
+//     }
+//     switch(currentState) {
+//         case 1:
+//             carModel.setAngle(55);
+//             carModel.setMotorSpeed(0);
+//             break;
+//         case 2:
+//             carModel.setAngle(-55);
+//             carModel.setMotorSpeed(0);
+//             break;
+//         case 3:
+//             carModel.setAngle(0);
+//             carModel.setMotorSpeed(0);
+//             break;
+//         case 4:
+//             carModel.setAngle(0);
+//             carModel.setMotorSpeed(100);
+//             break;
+//         case 5:
+//             carModel.setAngle(0);
+//             carModel.setMotorSpeed(-100);
+//             break;
+//         case 5:
+//             carModel.setAngle(0);
+//             carModel.setMotorSpeed(0);
+//             break;
+//     }
+//     currentState++;
+// }, 3000); 
