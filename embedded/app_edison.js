@@ -16,37 +16,3 @@ var carModel = new mod.CarModel(peripheralAccess, 12, //motor speed pin (pwm)
 carModel.setSteering(0);
 carModel.setMotorSpeed(0);
 var btHandler = new bt.BluetoothHandler(carModel, carModel);
-// var currentState: number = 1;
-// 
-// setInterval(() => {
-//     if(currentState > 6) {
-//         currentState = 1;
-//     }
-//     switch(currentState) {
-//         case 1:
-//             carModel.setAngle(55);
-//             carModel.setMotorSpeed(0);
-//             break;
-//         case 2:
-//             carModel.setAngle(-55);
-//             carModel.setMotorSpeed(0);
-//             break;
-//         case 3:
-//             carModel.setAngle(0);
-//             carModel.setMotorSpeed(0);
-//             break;
-//         case 4:
-//             carModel.setAngle(0);
-//             carModel.setMotorSpeed(100);
-//             break;
-//         case 5:
-//             carModel.setAngle(0);
-//             carModel.setMotorSpeed(-100);
-//             break;
-//         case 5:
-//             carModel.setAngle(0);
-//             carModel.setMotorSpeed(0);
-//             break;
-//     }
-//     currentState++;
-// }, 3000); 
