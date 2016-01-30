@@ -18,5 +18,5 @@ sleep 1s
 
 # Launch the app
 
-node_modules/forever/bin/forever start -o ./forever/app.log -p ./forever app_edison.js
-node_modules/forever/bin/forever start -o ./forever/eddystone.log -p ./forever eddystone.js
+BLENO_HCI_DEVICE_ID=1 node_modules/forever/bin/forever start -o ./forever/app.log -p ./forever app_edison.js
+BLENO_HCI_DEVICE_ID=0 node_modules/forever/bin/forever start -o ./forever/eddystone.log -p ./forever eddystone.js

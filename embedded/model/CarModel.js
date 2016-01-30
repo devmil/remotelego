@@ -45,7 +45,7 @@ var CarModel = (function () {
     };
     //Angle gets inverted because of the way the servo is physically built into the model
     CarModel.getAngleFromPercent = function (percent) {
-        return -(percent * 60); //60 is the max for the lego truck
+        return -((percent / 100) * 60); //60 is the max for the lego truck
     };
     CarModel.getPercentFromAngle = function (angle) {
         return -((60 / angle) * 100);

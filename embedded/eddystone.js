@@ -1,4 +1,3 @@
-process.env.BLENO_HCI_DEVICE_ID = 1;
 var bleno = require('bleno');
 var eddystoneBeacon = require('eddystone-beacon');
 function advertiseEddyStone() {

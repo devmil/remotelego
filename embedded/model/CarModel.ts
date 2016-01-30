@@ -84,7 +84,7 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
     
     //Angle gets inverted because of the way the servo is physically built into the model
     private static getAngleFromPercent(percent: number): number {
-        return -(percent * 60); //60 is the max for the lego truck
+        return -((percent/100) * 60); //60 is the max for the lego truck
     }
     
     private static getPercentFromAngle(angle: number): number {
