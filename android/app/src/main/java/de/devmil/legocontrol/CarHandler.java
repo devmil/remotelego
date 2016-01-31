@@ -9,6 +9,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class CarHandler extends BluetoothGattCallback {
@@ -23,12 +25,14 @@ public class CarHandler extends BluetoothGattCallback {
     private BluetoothGatt mGatt;
     private BluetoothGattService mService;
 
+
     private String mCarAddress;
 
     private int mSpeed;
     private int mLastSentSpeed;
     private int mSteering;
     private int mLastSentSteering;
+    private Timer mSendTimer;
 
     public CarHandler(Context context, String carAddress) {
         this.mSpeed = 0;
@@ -38,6 +42,15 @@ public class CarHandler extends BluetoothGattCallback {
         BluetoothManager bm = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         mAdapter = bm.getAdapter();
         mDevice = mAdapter.getRemoteDevice(carAddress);
+        mSendTimer = new Timer();
+        mSendTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(mIsConnected) {
+                    transmitData();
+                }
+            }
+        }, 1000, 1000);
     }
 
     public boolean isConnected() {
@@ -75,14 +88,16 @@ public class CarHandler extends BluetoothGattCallback {
             if(mLastSentSpeed != mSpeed) {
                 BluetoothGattCharacteristic characteristicSpeed = mService.getCharacteristic(UUID_CHARACTERISTIC_SPEED);
                 characteristicSpeed.setValue(new byte[]{(byte) mSpeed});
-                mGatt.writeCharacteristic(characteristicSpeed);
-                mLastSentSpeed = mSpeed;
+                if(mGatt.writeCharacteristic(characteristicSpeed)) {
+                    mLastSentSpeed = mSpeed;
+                }
             }
             if(mLastSentSteering != mSteering) {
                 BluetoothGattCharacteristic characteristicSteer = mService.getCharacteristic(UUID_CHARACTERISTIC_STEER);
                 characteristicSteer.setValue(new byte[] { (byte)mSteering });
-                mGatt.writeCharacteristic(characteristicSteer);
-                mLastSentSteering = mSteering;
+                if(mGatt.writeCharacteristic(characteristicSteer)) {
+                    mLastSentSteering = mSteering;
+                }
             }
         }
     }

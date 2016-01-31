@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.SeekBar;
 
 public class ControlActivity extends AppCompatActivity {
 
@@ -20,54 +19,20 @@ public class ControlActivity extends AppCompatActivity {
     }
 
     private CarHandler mCarHandler;
-    private SeekBar mSeekSpeed;
-    private SeekBar mSeekSteer;
+    private DirectionControl mDirectionControl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_control);
 
-        mSeekSpeed = (SeekBar)findViewById(R.id.activity_control_seekspeed);
-        mSeekSteer = (SeekBar)findViewById(R.id.activity_control_seeksteer);
+        mDirectionControl = (DirectionControl)findViewById(R.id.activity_control_direction);
 
-        mSeekSpeed.setMax(200);
-        mSeekSpeed.setProgress(100);
-        mSeekSteer.setMax(200);
-        mSeekSteer.setProgress(100);
-
-        mSeekSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        mDirectionControl.setDirectionChangedListener(new DirectionControl.IDirectionChangedListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int speed = progress - 100;
-                mCarHandler.setSpeed(speed);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mSeekSteer.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int percent = progress - 100;
-                mCarHandler.setSteering(percent);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+            public void onDirectionChanged(int percentSpeed, int percentSteering) {
+                mCarHandler.setSpeed(percentSpeed);
+                mCarHandler.setSteering(percentSteering);
             }
         });
     }
