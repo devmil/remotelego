@@ -109,8 +109,8 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
                 break;
             case CarState.Ready:
                 this.mCarStateLed.setColor(false, true, false);
-                this.mFrontLeds.setOnOff(true);
-                this.mBackLeds.setOnOff(true);
+                this.mFrontLeds.setOnOff(false);
+                this.mBackLeds.setOnOff(false);
                 break;
             case CarState.Connected:
                 this.mCarStateLed.setColor(false, false, true);
