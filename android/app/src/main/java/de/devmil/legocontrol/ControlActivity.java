@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import de.devmil.legologic.CarHandler;
+import de.devmil.legologic.DirectionControl;
+
 public class ControlActivity extends AppCompatActivity {
 
     private static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";

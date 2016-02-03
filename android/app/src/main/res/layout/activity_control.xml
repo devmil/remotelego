@@ -9,7 +9,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="de.devmil.legocontrol.ControlActivity">
 
-    <de.devmil.legocontrol.DirectionControl
+    <de.devmil.legologic.DirectionControl
         android:id="@+id/activity_control_direction"
         android:layout_centerInParent="true"
         android:layout_width="300dp"

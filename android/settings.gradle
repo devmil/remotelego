@@ -1,1 +1,1 @@
-include ':app', ':legowear'
+include ':app', ':legowear', ':legologic'

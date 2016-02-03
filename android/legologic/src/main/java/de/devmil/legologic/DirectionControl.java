@@ -1,4 +1,4 @@
-package de.devmil.legocontrol;
+package de.devmil.legologic;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -65,7 +65,7 @@ public class DirectionControl extends RelativeLayout {
         mHandle.setOutlineProvider(new RoundOutlineProvider());
         mHandle.setClipToOutline(true);
 
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int)px, (int)px);
+        LayoutParams params = new LayoutParams((int)px, (int)px);
         params.addRule(RelativeLayout.CENTER_VERTICAL);
         params.addRule(RelativeLayout.CENTER_HORIZONTAL);
         this.addView(mHandle, params);

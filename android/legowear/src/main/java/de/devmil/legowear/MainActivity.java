@@ -24,6 +24,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.devmil.legologic.CarHandler;
+
 public class MainActivity extends Activity {
 
     private RecyclerView mRecyclerView;

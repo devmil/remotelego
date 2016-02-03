@@ -1,4 +1,4 @@
-package de.devmil.legowear;
+package de.devmil.legologic;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -20,6 +20,7 @@ public class CarHandler extends BluetoothGattCallback {
     private static final UUID UUID_CHARACTERISTIC_STEER = UUID.fromString("7baf8dca-2bfc-47fb-af29-042fccc180eb");
 
     private boolean mIsConnected;
+    private boolean mShouldDisconnect;
     private BluetoothAdapter mAdapter;
     private BluetoothDevice mDevice;
     private BluetoothGatt mGatt;
@@ -38,6 +39,7 @@ public class CarHandler extends BluetoothGattCallback {
         this.mSpeed = 0;
         this.mSteering = 0;
         mIsConnected = false;
+        mShouldDisconnect = false;
         mCarAddress = carAddress;
         BluetoothManager bm = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         mAdapter = bm.getAdapter();
@@ -46,11 +48,11 @@ public class CarHandler extends BluetoothGattCallback {
         mSendTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if(mIsConnected) {
+                if (mIsConnected && isDirty()) {
                     transmitData();
                 }
             }
-        }, 1000, 1000);
+        }, 500, 300);
     }
 
     public boolean isConnected() {
@@ -68,11 +70,13 @@ public class CarHandler extends BluetoothGattCallback {
     }
 
     public void connect(Context context) {
+        mShouldDisconnect = false;
         mGatt = mDevice.connectGatt(context, false, this);
         mGatt.connect();
     }
 
     public void disconnect() {
+        mShouldDisconnect = true;
         if(mGatt != null) {
             mGatt.disconnect();
         }
@@ -83,13 +87,21 @@ public class CarHandler extends BluetoothGattCallback {
         mLastSentSpeed = 0;
     }
 
-    private void transmitData() {
+    private synchronized boolean isDirty() {
+        return mLastSentSpeed != mSpeed
+                || mLastSentSteering != mSteering;
+    }
+
+    private synchronized boolean transmitData() {
+        boolean result = true;
         if(mService != null & mIsConnected) {
             if(mLastSentSpeed != mSpeed) {
                 BluetoothGattCharacteristic characteristicSpeed = mService.getCharacteristic(UUID_CHARACTERISTIC_SPEED);
                 characteristicSpeed.setValue(new byte[]{(byte) mSpeed});
                 if(mGatt.writeCharacteristic(characteristicSpeed)) {
                     mLastSentSpeed = mSpeed;
+                } else {
+                    result = false;
                 }
             }
             if(mLastSentSteering != mSteering) {
@@ -97,9 +109,12 @@ public class CarHandler extends BluetoothGattCallback {
                 characteristicSteer.setValue(new byte[] { (byte)mSteering });
                 if(mGatt.writeCharacteristic(characteristicSteer)) {
                     mLastSentSteering = mSteering;
+                } else {
+                    result = false;
                 }
             }
         }
+        return result;
     }
 
     @Override
@@ -111,7 +126,9 @@ public class CarHandler extends BluetoothGattCallback {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                gatt.connect();
+                if(!mShouldDisconnect) {
+                    gatt.connect();
+                }
             } else {
                 mGatt = null;
                 disconnect();

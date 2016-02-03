@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import de.devmil.legologic.CarHandler;
+
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;

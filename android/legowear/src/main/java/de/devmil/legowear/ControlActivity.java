@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import de.devmil.legologic.CarHandler;
+import de.devmil.legologic.DirectionControl;
+
 public class ControlActivity extends Activity {
 
     private static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";
