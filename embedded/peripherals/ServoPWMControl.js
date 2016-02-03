@@ -22,7 +22,6 @@ var ServoPWMControl = (function () {
         var activeMSec = ((ServoPWMControl.sPulseMaxMSec - ServoPWMControl.sPulseMinMSec) * ratio) + ServoPWMControl.sPulseMinMSec;
         var pwmPercentage = activeMSec / ServoPWMControl.sRangeMSec;
         this.mPin.setPercentage(pwmPercentage);
-        // this.mPin.setPulseWidth(activeMSec * 1000);
         console.log('Angle = ' + this.mAngle + ', Ratio = ' + ratio + ', Active ms = ' + activeMSec);
     };
     ServoPWMControl.prototype.getAngle = function () {

@@ -16,12 +16,6 @@ var EdisonPwm = (function () {
         this.mPwm.write(percentage);
         console.log('PWM[' + this.mLinuxPin + ']: Percentage = ' + (percentage * 100) + '%');
     };
-    EdisonPwm.prototype.setPulseWidth = function (width) {
-        this.mPwm.enable(true);
-        this.mPwm.period_us(this.mPeriondUs);
-        this.mPwm.pulsewidth_us(width);
-        console.log('PWM[' + this.mLinuxPin + ']: PulseWidth = ' + width + ' us');
-    };
     return EdisonPwm;
 })();
 exports.EdisonPwm = EdisonPwm;
