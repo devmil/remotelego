@@ -15,4 +15,4 @@ var carModel = new mod.CarModel(peripheralAccess, 12, //motor speed pin (pwm)
 );
 carModel.setSteering(0);
 carModel.setMotorSpeed(0);
-var btHandler = new bt.BluetoothHandler(carModel, carModel);
+var btHandler = new bt.BluetoothHandler("LegoTruck Edison", carModel, carModel);

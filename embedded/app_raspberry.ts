@@ -8,7 +8,7 @@ var carModel: mod.CarModel = new mod.CarModel(
     13, //motor speed pin (pwm)
     5, //motor direction
     6, //motor enable
-    12, //servo control pwm
+    18, //servo control pwm
     40000, //motor pwm frequency
     19, //led front
     26, //led back
@@ -20,4 +20,4 @@ var carModel: mod.CarModel = new mod.CarModel(
 carModel.setSteering(0);
 carModel.setMotorSpeed(0);
 
-var btHandler: bt.BluetoothHandler = new bt.BluetoothHandler(carModel, carModel);
+var btHandler: bt.BluetoothHandler = new bt.BluetoothHandler("LegoTruck Raspberry", carModel, carModel);

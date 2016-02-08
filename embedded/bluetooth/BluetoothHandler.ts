@@ -7,10 +7,10 @@ export class BluetoothHandler {
     private mLegoCarService;
     private mAdvertiser : adv.LegoCarServiceAdvertiser;
     
-    constructor(carModel: ICarModel, visualizer: IBluetoothStateVisualizer) {
+    constructor(name: string, carModel: ICarModel, visualizer: IBluetoothStateVisualizer) {
         this.mCarModel = carModel;
         this.mLegoCarService = new LegoCarService(carModel);
-        this.mAdvertiser = new adv.LegoCarServiceAdvertiser("Lego Truck", this.mLegoCarService, visualizer);
+        this.mAdvertiser = new adv.LegoCarServiceAdvertiser(name, this.mLegoCarService, visualizer);
         
         bleno.on('stateChange',
             (state) =>

@@ -20,4 +20,4 @@ var carModel: mod.CarModel = new mod.CarModel(
 carModel.setSteering(0);
 carModel.setMotorSpeed(0);
 
-var btHandler: bt.BluetoothHandler = new bt.BluetoothHandler(carModel, carModel);
+var btHandler: bt.BluetoothHandler = new bt.BluetoothHandler("LegoTruck Edison", carModel, carModel);

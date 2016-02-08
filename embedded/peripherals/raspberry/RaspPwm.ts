@@ -21,14 +21,19 @@ export class RaspPwm implements IPwm {
         this.mPeriodUs = periodUs;
         
         rpio.open(this.mPhysicalPin, rpio.PWM);
-        var tickDurationMS: number = 1 / (RaspPwm.EFFECTIVE_FREQUENCY_HZ / 1000);
-        this.mPeriodTicks = (periodUs * 1000) / tickDurationMS;
-        rpio.setRange(this.mPhysicalPin, this.mPeriodTicks);
-        rpio.pwmSetClockDivider(128);
+        var tickDurationSeconds = 1 / RaspPwm.EFFECTIVE_FREQUENCY_HZ;
+        var tickDurationMS: number = tickDurationSeconds * 1000;
+        console.log("PWM Tick duration s = " + tickDurationSeconds);
+        console.log("PWM Tick duration ms = " + tickDurationMS);
+        this.mPeriodTicks = (periodUs / 1000) / tickDurationMS;
+        console.log("PWM Period ticks = " + this.mPeriodTicks);
+        rpio.pwmSetRange(this.mPhysicalPin, this.mPeriodTicks);
+        rpio.pwmSetClockDivider(RaspPwm.CLOCK_DIVIDER);
     }
     
     setPercentage(percentage: number) {
         var ticks: number = this.mPeriodTicks * percentage;
+        console.log("PWM Data = " + ticks);
         rpio.pwmSetData(this.mPhysicalPin, ticks);
     }
 }

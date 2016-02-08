@@ -11,6 +11,15 @@ plan.target('raspberrypi-2-wifi', {
   FileOwnerName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getUserName()
 });
 
+plan.target('raspberrypi-2-cam-wifi', {
+  host: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getHost(),
+  username: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getUserName(),
+  password: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getPassword(),
+  agent: process.env.SSH_AUTH_SOCK,
+}, {
+  FileOwnerName: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getUserName()
+});
+
 plan.target('edison', {
   host: params.FlightplanParameters.getEdisonParameters().getHost(),
   username: params.FlightplanParameters.getEdisonParameters().getUserName(),
