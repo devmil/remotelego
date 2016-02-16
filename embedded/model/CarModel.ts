@@ -1,7 +1,7 @@
 import sc = require('../peripherals/ServoPWMControl');
 import mc = require('../peripherals/MotorPWMControl');
 import led = require('../peripherals/LedControl');
-import rgpled = require('../peripherals/RgbLedControl')
+import rgbled = require('../peripherals/RgbLedControl')
 
 enum CarState {
     Booting,
@@ -15,7 +15,9 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
     private mServoControl: sc.ServoPWMControl;
     private mFrontLeds: led.LedControl;
     private mBackLeds: led.LedControl;
-    private mCarStateLed: rgpled.RgbLedControl;
+    private mCarStateLed: rgbled.RgbLedControl;
+    private mFrontFogLeds: led.LedControl;
+    private mBackDriveLeds: led.LedControl;
     
     private mState: CarState;
     
@@ -30,7 +32,9 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
         pinBackLeds: number,
         pinStateRed: number,
         pinStateGreen: number,
-        pinStateBlue: number) {
+        pinStateBlue: number,
+        pinFrontFogLeds: number,
+        pinBackDriveLeds: number) {
             
         this.mState = CarState.Booting;
             
@@ -46,7 +50,9 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
                                     
         this.mFrontLeds = new led.LedControl(peripheralAccess, pinFrontLeds);
         this.mBackLeds = new led.LedControl(peripheralAccess, pinBackLeds);
-        this.mCarStateLed = new rgpled.RgbLedControl(peripheralAccess, pinStateRed, pinStateGreen, pinStateBlue);
+        this.mCarStateLed = new rgbled.RgbLedControl(peripheralAccess, pinStateRed, pinStateGreen, pinStateBlue);
+        this.mFrontFogLeds= new led.LedControl(peripheralAccess, pinFrontFogLeds);
+        this.mBackDriveLeds= new led.LedControl(peripheralAccess, pinBackDriveLeds);
                               
                               
         this.setInitialValues();      
@@ -62,6 +68,16 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
     
     public setMotorSpeed(speedPercentage: number) {
         this.mMotorControl.setMotorSpeedPercentage(speedPercentage);
+        if(speedPercentage > 0) {
+            this.mFrontFogLeds.setOnOff(true);
+            this.mBackDriveLeds.setOnOff(false);
+        } else if(speedPercentage < 0) {
+            this.mFrontFogLeds.setOnOff(false);
+            this.mBackDriveLeds.setOnOff(true);
+        } else {
+            this.mFrontFogLeds.setOnOff(false);
+            this.mBackDriveLeds.setOnOff(false);
+        }
     }
     
     public getMotorSpeed(): number {

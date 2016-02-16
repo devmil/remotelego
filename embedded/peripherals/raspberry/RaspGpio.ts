@@ -7,14 +7,20 @@ export class RaspGpio implements IGpio {
     
     constructor(logicalPin: number) {
         this.mLogicalPin = logicalPin;
-        this.mPhysicalPin = mapping.RaspPinMap.getGpio(logicalPin);
+        if(logicalPin >= 0) {
+            this.mPhysicalPin = mapping.RaspPinMap.getGpio(logicalPin);
+        }
     }
     
     open(out: boolean) {
-        rpio.open(this.mPhysicalPin, out ? rpio.OUTPUT : rpio.INPUT);
+        if(this.mLogicalPin >= 0) {
+            rpio.open(this.mPhysicalPin, out ? rpio.OUTPUT : rpio.INPUT);
+        }
     }
     
     write(high: boolean) {
-        rpio.write(this.mPhysicalPin, high ? rpio.HIGH : rpio.LOW);
+        if(this.mLogicalPin >= 0) {
+            rpio.write(this.mPhysicalPin, high ? rpio.HIGH : rpio.LOW);
+        }
     }
 }

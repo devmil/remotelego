@@ -9,16 +9,22 @@ export class EdisonGpio implements IGpio {
     
     constructor(pin: number) {
         this.mLinuxPin = pin;
-        this.mMraaPin = mapping.EdisonPinMap.getGpio(pin);
+        if(pin >= 0) {
+            this.mMraaPin = mapping.EdisonPinMap.getGpio(pin);
+        }
     }
     
     open(out: boolean) {
-        this.mGpio = new mraa.Gpio(this.mMraaPin);
-        this.mGpio.dir(out ? mraa.DIR_OUT : mraa.DIR_IN);
+        if(this.mLinuxPin >= 0) {
+            this.mGpio = new mraa.Gpio(this.mMraaPin);
+            this.mGpio.dir(out ? mraa.DIR_OUT : mraa.DIR_IN);
+        }
     }
     
     write(high: boolean) {
-        this.mGpio.write(high ? 1 : 0);
-        console.log('GPIO[' + this.mLinuxPin + ']: ' + high);
+        if(this.mLinuxPin >= 0) {
+            this.mGpio.write(high ? 1 : 0);
+            console.log('GPIO[' + this.mLinuxPin + ']: ' + high);
+        }
     }
 }

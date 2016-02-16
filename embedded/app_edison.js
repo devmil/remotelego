@@ -11,7 +11,9 @@ var carModel = new mod.CarModel(peripheralAccess, 12, //motor speed pin (pwm)
 45, //led back
 46, //led state red
 47, //led state green
-48 //led state blue
+48, //led state blue
+-1, //led front fog
+-1 //led back drive
 );
 carModel.setSteering(0);
 carModel.setMotorSpeed(0);

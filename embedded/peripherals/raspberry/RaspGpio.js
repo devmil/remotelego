@@ -3,13 +3,19 @@ var mapping = require('./RaspPinMap');
 var RaspGpio = (function () {
     function RaspGpio(logicalPin) {
         this.mLogicalPin = logicalPin;
-        this.mPhysicalPin = mapping.RaspPinMap.getGpio(logicalPin);
+        if (logicalPin >= 0) {
+            this.mPhysicalPin = mapping.RaspPinMap.getGpio(logicalPin);
+        }
     }
     RaspGpio.prototype.open = function (out) {
-        rpio.open(this.mPhysicalPin, out ? rpio.OUTPUT : rpio.INPUT);
+        if (this.mLogicalPin >= 0) {
+            rpio.open(this.mPhysicalPin, out ? rpio.OUTPUT : rpio.INPUT);
+        }
     };
     RaspGpio.prototype.write = function (high) {
-        rpio.write(this.mPhysicalPin, high ? rpio.HIGH : rpio.LOW);
+        if (this.mLogicalPin >= 0) {
+            rpio.write(this.mPhysicalPin, high ? rpio.HIGH : rpio.LOW);
+        }
     };
     return RaspGpio;
 })();

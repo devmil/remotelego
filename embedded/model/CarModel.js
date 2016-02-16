@@ -1,7 +1,7 @@
 var sc = require('../peripherals/ServoPWMControl');
 var mc = require('../peripherals/MotorPWMControl');
 var led = require('../peripherals/LedControl');
-var rgpled = require('../peripherals/RgbLedControl');
+var rgbled = require('../peripherals/RgbLedControl');
 var CarState;
 (function (CarState) {
     CarState[CarState["Booting"] = 0] = "Booting";
@@ -9,13 +9,15 @@ var CarState;
     CarState[CarState["Connected"] = 2] = "Connected";
 })(CarState || (CarState = {}));
 var CarModel = (function () {
-    function CarModel(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, pinServo, motorFrequencyHz, pinFrontLeds, pinBackLeds, pinStateRed, pinStateGreen, pinStateBlue) {
+    function CarModel(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, pinServo, motorFrequencyHz, pinFrontLeds, pinBackLeds, pinStateRed, pinStateGreen, pinStateBlue, pinFrontFogLeds, pinBackDriveLeds) {
         this.mState = CarState.Booting;
         this.mMotorControl = new mc.MotorPWMControl(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, motorFrequencyHz);
         this.mServoControl = new sc.ServoPWMControl(peripheralAccess, pinServo);
         this.mFrontLeds = new led.LedControl(peripheralAccess, pinFrontLeds);
         this.mBackLeds = new led.LedControl(peripheralAccess, pinBackLeds);
-        this.mCarStateLed = new rgpled.RgbLedControl(peripheralAccess, pinStateRed, pinStateGreen, pinStateBlue);
+        this.mCarStateLed = new rgbled.RgbLedControl(peripheralAccess, pinStateRed, pinStateGreen, pinStateBlue);
+        this.mFrontFogLeds = new led.LedControl(peripheralAccess, pinFrontFogLeds);
+        this.mBackDriveLeds = new led.LedControl(peripheralAccess, pinBackDriveLeds);
         this.setInitialValues();
     }
     CarModel.prototype.setSteering = function (percent) {
@@ -26,6 +28,18 @@ var CarModel = (function () {
     };
     CarModel.prototype.setMotorSpeed = function (speedPercentage) {
         this.mMotorControl.setMotorSpeedPercentage(speedPercentage);
+        if (speedPercentage > 0) {
+            this.mFrontFogLeds.setOnOff(true);
+            this.mBackDriveLeds.setOnOff(false);
+        }
+        else if (speedPercentage < 0) {
+            this.mFrontFogLeds.setOnOff(false);
+            this.mBackDriveLeds.setOnOff(true);
+        }
+        else {
+            this.mFrontFogLeds.setOnOff(false);
+            this.mBackDriveLeds.setOnOff(false);
+        }
     };
     CarModel.prototype.getMotorSpeed = function () {
         return this.mMotorControl.getMotorSpeedPercentage();

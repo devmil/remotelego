@@ -14,7 +14,9 @@ var carModel: mod.CarModel = new mod.CarModel(
     26, //led back
     16, //led state red
     20, //led state green
-    21 //led state blue
+    21, //led state blue
+    9,  //led front fog
+    11  //led back drive
 );
 
 carModel.setSteering(0);
