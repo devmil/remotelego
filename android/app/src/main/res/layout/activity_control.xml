@@ -11,8 +11,9 @@
 
     <de.devmil.legologic.DirectionControl
         android:id="@+id/activity_control_direction"
+        android:layout_margin="10dp"
         android:layout_centerInParent="true"
-        android:layout_width="300dp"
-        android:layout_height="300dp" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>
