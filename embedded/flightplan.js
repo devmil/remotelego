@@ -29,6 +29,16 @@ plan.target('edison', {
   FileOwnerName: params.FlightplanParameters.getEdisonParameters().getUserName()
 });
 
+plan.target('fexdev', {
+  host: params.FlightplanParameters.getRaspberryPiFexDevParameters().getHost(),
+  username: params.FlightplanParameters.getRaspberryPiFexDevParameters().getUserName(),
+  password: params.FlightplanParameters.getRaspberryPiFexDevParameters().getPassword(),
+  agent: process.env.SSH_AUTH_SOCK,
+}, {
+  FileOwnerName: params.FlightplanParameters.getRaspberryPiFexDevParameters().getUserName()
+});
+
+
 var tmpDir = 'raspberry-legotruck-' + new Date().getTime();
 
 // run commands on localhost
