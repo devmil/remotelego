@@ -21,7 +21,10 @@ public class ControlActivity extends AppCompatActivity {
         return  result;
     }
 
-    private CarHandler mCarHandler;
+    private CarHandler getCarHandler() {
+        return ((Application)getApplication()).getCarHandler();
+    }
+
     private DirectionControl mDirectionControl;
 
     @Override
@@ -34,8 +37,9 @@ public class ControlActivity extends AppCompatActivity {
         mDirectionControl.setDirectionChangedListener(new DirectionControl.IDirectionChangedListener() {
             @Override
             public void onDirectionChanged(int percentSpeed, int percentSteering) {
-                mCarHandler.setSpeed(percentSpeed);
-                mCarHandler.setSteering(percentSteering);
+                CarHandler carHandler = getCarHandler();
+                carHandler.setSpeed(percentSpeed);
+                carHandler.setSteering(percentSteering);
             }
         });
     }
@@ -45,15 +49,14 @@ public class ControlActivity extends AppCompatActivity {
         super.onResume();
 
         String address = getIntent().getStringExtra(EXTRA_DEVICE_ADDRESS);
-
-        mCarHandler = new CarHandler(this, address);
-        mCarHandler.connect(this);
+        ((Application) getApplication()).setActiveCar(address);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mCarHandler.disconnect();
-        mCarHandler = null;
+        if(!isChangingConfigurations()) {
+            ((Application) getApplication()).setActiveCar(null);
+        }
     }
 }

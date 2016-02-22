@@ -55,6 +55,10 @@ public class CarHandler extends BluetoothGattCallback {
         }, 500, 300);
     }
 
+    public String getAddress() {
+        return mCarAddress;
+    }
+
     public boolean isConnected() {
         return mIsConnected;
     }

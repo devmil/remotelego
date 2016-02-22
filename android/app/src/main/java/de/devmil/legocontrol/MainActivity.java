@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        ((Application)getApplication()).setActiveCar(null);
         mScanner = mAdapter.getBluetoothLeScanner();
         mScanSettings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
