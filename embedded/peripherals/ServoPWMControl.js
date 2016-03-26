@@ -1,7 +1,8 @@
 var ServoPWMControl = (function () {
-    function ServoPWMControl(peripheralAccess, pin) {
+    function ServoPWMControl(peripheralAccess, pin, reverseServo) {
         this.mPeripheralAccess = peripheralAccess;
         this.mPin = peripheralAccess.getPwm(pin);
+        this.mReverse = reverseServo;
         this.prepare();
         this.setAngle(0);
     }
@@ -18,6 +19,9 @@ var ServoPWMControl = (function () {
             angle = 90;
         }
         this.mAngle = angle;
+        if (this.mReverse) {
+            angle *= -1;
+        }
         var ratio = ((angle + 90) / 180);
         var activeMSec = ((ServoPWMControl.sPulseMaxMSec - ServoPWMControl.sPulseMinMSec) * ratio) + ServoPWMControl.sPulseMinMSec;
         var pwmPercentage = activeMSec / ServoPWMControl.sRangeMSec;

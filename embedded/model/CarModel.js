@@ -9,10 +9,10 @@ var CarState;
     CarState[CarState["Connected"] = 2] = "Connected";
 })(CarState || (CarState = {}));
 var CarModel = (function () {
-    function CarModel(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, pinServo, motorFrequencyHz, pinFrontLeds, pinBackLeds, pinStateRed, pinStateGreen, pinStateBlue, pinFrontFogLeds, pinBackDriveLeds) {
+    function CarModel(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, pinServo, reverseServo, motorFrequencyHz, pinFrontLeds, pinBackLeds, pinStateRed, pinStateGreen, pinStateBlue, pinFrontFogLeds, pinBackDriveLeds) {
         this.mState = CarState.Booting;
         this.mMotorControl = new mc.MotorPWMControl(peripheralAccess, pinMotorSpeed, pinMotorDirection, pinMotorOnOff, motorFrequencyHz);
-        this.mServoControl = new sc.ServoPWMControl(peripheralAccess, pinServo);
+        this.mServoControl = new sc.ServoPWMControl(peripheralAccess, pinServo, reverseServo);
         this.mFrontLeds = new led.LedControl(peripheralAccess, pinFrontLeds);
         this.mBackLeds = new led.LedControl(peripheralAccess, pinBackLeds);
         this.mCarStateLed = new rgbled.RgbLedControl(peripheralAccess, pinStateRed, pinStateGreen, pinStateBlue);

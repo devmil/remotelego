@@ -8,16 +8,20 @@ plan.target('raspberrypi-2-wifi', {
   password: params.FlightplanParameters.getRaspberryPi2WifiParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getUserName()
+  FileOwnerName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getUserName(),
+  AppDirectoryName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getAppDirectoryName(),
+  AppFileName: params.FlightplanParameters.getRaspberryPi2WifiParameters().getAppFileName()
 });
 
-plan.target('raspberrypi-2-cam-wifi', {
-  host: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getHost(),
-  username: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getUserName(),
-  password: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getPassword(),
+plan.target('raspberrypi-2-jeep', {
+  host: params.FlightplanParameters.getRaspberryPi2JeepParameters().getHost(),
+  username: params.FlightplanParameters.getRaspberryPi2JeepParameters().getUserName(),
+  password: params.FlightplanParameters.getRaspberryPi2JeepParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: params.FlightplanParameters.getRaspberryPi2CamWifiParameters().getUserName()
+  FileOwnerName: params.FlightplanParameters.getRaspberryPi2JeepParameters().getUserName(),
+  AppDirectoryName: params.FlightplanParameters.getRaspberryPi2JeepParameters().getAppDirectoryName(),
+  AppFileName: params.FlightplanParameters.getRaspberryPi2JeepParameters().getAppFileName()
 });
 
 plan.target('edison', {
@@ -26,7 +30,9 @@ plan.target('edison', {
   password: params.FlightplanParameters.getEdisonParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: params.FlightplanParameters.getEdisonParameters().getUserName()
+  FileOwnerName: params.FlightplanParameters.getEdisonParameters().getUserName(),
+  AppDirectoryName: params.FlightplanParameters.getEdisonParameters().getAppDirectoryName(),
+  AppFileName: params.FlightplanParameters.getEdisonParameters().getAppFileName()
 });
 
 plan.target('fexdev', {
@@ -35,7 +41,9 @@ plan.target('fexdev', {
   password: params.FlightplanParameters.getRaspberryPiFexDevParameters().getPassword(),
   agent: process.env.SSH_AUTH_SOCK,
 }, {
-  FileOwnerName: params.FlightplanParameters.getRaspberryPiFexDevParameters().getUserName()
+  FileOwnerName: params.FlightplanParameters.getRaspberryPiFexDevParameters().getUserName(),
+  AppDirectoryName: params.FlightplanParameters.getRaspberryPiFexDevParameters().getAppDirectoryName(),
+  AppFileName: params.FlightplanParameters.getRaspberryPiFexDevParameters().getAppFileName()
 });
 
 
@@ -54,12 +62,13 @@ plan.local(function(local) {
 
 // run commands on the target's remote hosts
 plan.remote(function(remote) {
-    remote.log('Deleting legotruck content');
+    var appDirectory = plan.runtime.options.AppDirectoryName;
+    remote.log('Deleting ' + appDirectory + ' content');
     remote.exec('mkdir -p ~/apps');
-    remote.exec('mkdir -p ~/apps/legotruck');
-    remote.exec('mkdir -p ~/apps/legotruck/dummy');
+    remote.exec('mkdir -p ~/apps/' + appDirectory);
+    remote.exec('mkdir -p ~/apps/' + appDirectory + '/dummy');
     
-    var filesOut = remote.exec('find ~/apps/legotruck/ -type f -maxdepth 1').stdout;
+    var filesOut = remote.exec('find ~/apps/' + appDirectory + '/ -type f -maxdepth 1').stdout;
     if(filesOut != null) { 
         var files = filesOut.split('\n');
         files.forEach(function(file) {
@@ -69,7 +78,7 @@ plan.remote(function(remote) {
         });
     }
     
-    var directoriesOut = remote.exec('ls -d ~/apps/legotruck/*/').stdout;
+    var directoriesOut = remote.exec('ls -d ~/apps/' + appDirectory + '/*/').stdout;
     if(directoriesOut != null) {
     var directories = directoriesOut.split('\n');
         directories.forEach(function(dir) {
@@ -82,8 +91,11 @@ plan.remote(function(remote) {
     } 
 
     remote.log('Move folder to app root');
-    remote.sudo('cp -R ~/tmp/' + tmpDir + '/. ~/apps/legotruck/', {user: plan.runtime.options.FileOwnerName});
+    remote.sudo('cp -R ~/tmp/' + tmpDir + '/. ~/apps/' + appDirectory + '/', {user: plan.runtime.options.FileOwnerName});
     remote.rm('-rf ~/tmp/' + tmpDir);
+    
+    //copy application file
+    remote.exec('mv ~/apps/' + appDirectory + '/' + plan.runtime.options.AppFileName + '.js ~/apps/' + appDirectory + '/app.js')
     //install module dependencies
-    remote.exec('cd ~/apps/legotruck; npm update');
+    remote.exec('cd ~/apps/' + appDirectory + '; npm update');
 });

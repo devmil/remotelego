@@ -16,5 +16,5 @@ sleep 1s
 # Launch the app
 
 #BLENO_HCI_DEVICE_ID=1 node app_raspberry.js
-BLENO_HCI_DEVICE_ID=1 node_modules/forever/bin/forever start -o ./forever/app.log -p ./forever app_raspberry.js
+BLENO_HCI_DEVICE_ID=1 node_modules/forever/bin/forever start -o ./forever/app.log -p ./forever app.js
 BLENO_HCI_DEVICE_ID=0 node_modules/forever/bin/forever start -o ./forever/eddystone.log -p ./forever eddystone.js

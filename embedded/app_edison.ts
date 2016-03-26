@@ -9,6 +9,7 @@ var carModel: mod.CarModel = new mod.CarModel(
     15, //motor direction
     14, //motor enable
     13, //servo control pwm
+    false, //reverse servo
     40000, //motor pwm frequency
     44, //led front
     45, //led back

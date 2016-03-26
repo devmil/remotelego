@@ -27,6 +27,7 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
         pinMotorDirection: number, 
         pinMotorOnOff: number, 
         pinServo: number,
+        reverseServo: boolean,
         motorFrequencyHz: number,
         pinFrontLeds: number,
         pinBackLeds: number,
@@ -46,7 +47,8 @@ export class CarModel implements ICarModel, IBluetoothStateVisualizer {
                                 motorFrequencyHz)
         this.mServoControl = new sc.ServoPWMControl(
                                     peripheralAccess, 
-                                    pinServo);
+                                    pinServo,
+                                    reverseServo);
                                     
         this.mFrontLeds = new led.LedControl(peripheralAccess, pinFrontLeds);
         this.mBackLeds = new led.LedControl(peripheralAccess, pinBackLeds);

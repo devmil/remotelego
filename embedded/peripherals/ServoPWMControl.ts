@@ -2,6 +2,7 @@ export class ServoPWMControl {
     private mPeripheralAccess: IPeripheralAccess;
     
     private mPin: IPwm;
+    private mReverse: boolean;
     
     private static sRangeMSec: number = 20;
     private static sPulseMinMSec: number = 0.5;
@@ -9,9 +10,10 @@ export class ServoPWMControl {
     
     private mAngle: number;
     
-    constructor(peripheralAccess: IPeripheralAccess, pin: number) {
+    constructor(peripheralAccess: IPeripheralAccess, pin: number, reverseServo: boolean) {
         this.mPeripheralAccess = peripheralAccess;
         this.mPin = peripheralAccess.getPwm(pin);
+        this.mReverse = reverseServo;
         this.prepare();
         this.setAngle(0);
     }
@@ -30,6 +32,11 @@ export class ServoPWMControl {
         }
 
         this.mAngle = angle;
+        
+        if(this.mReverse) {
+            angle *= -1;
+        }
+        
         var ratio: number = ((angle + 90) / 180);
         var activeMSec = ((ServoPWMControl.sPulseMaxMSec - ServoPWMControl.sPulseMinMSec) * ratio) + ServoPWMControl.sPulseMinMSec;
         var pwmPercentage = activeMSec / ServoPWMControl.sRangeMSec;
