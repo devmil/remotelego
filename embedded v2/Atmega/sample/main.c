@@ -35,9 +35,9 @@ typedef struct {
 } Pin;
 
 typedef struct {
-	Pin pinEnable;
 	Pin pinDirection;
 	uint16_t timerMax;
+	uint8_t isInverted;
 	volatile uint16_t* timerCounterRegister;
 } Motor;
 
@@ -90,32 +90,33 @@ void Pin_setValue(Pin* pin, uint8_t value) {
 	}
 }
 
+void Motor_setSpeedPercent(Motor* motor, float percent);
+
 void Motor_init(
 	Motor* motor,
-	Pin pinEnable,
 	Pin pinDirection,
 	uint16_t timerMax,
-	volatile uint16_t* timerCounterRegister) {
-		motor->pinEnable = pinEnable;
+	volatile uint16_t* timerCounterRegister,
+	uint8_t isInverted) {
 		motor->pinDirection = pinDirection;
 		motor->timerMax = timerMax;
 		motor->timerCounterRegister = timerCounterRegister;
+		motor->isInverted = isInverted;
 		
-		Pin_setMode(&pinEnable, 1); //output
-		Pin_setValue(&pinEnable, 0);
 		Pin_setMode(&pinDirection, 1); //output
 		Pin_setValue(&pinDirection, 0);
+		
+		Motor_setSpeedPercent(motor, 0);
 } 
 
 void Motor_setDirection(Motor* motor, uint8_t direction) {
 	Pin_setValue(&motor->pinDirection, direction);
 }
 
-void Motor_setEnable(Motor* motor, uint8_t enable) {
-	Pin_setValue(&motor->pinEnable, enable);
-}
-
 void Motor_setSpeedPercent(Motor* motor, float percent) {
+	if(motor->isInverted) {
+		percent = 100 - percent;
+	}
 	float value = (motor->timerMax * percent) / 100;
 	*motor->timerCounterRegister = (uint8_t)value;
 }
@@ -156,25 +157,20 @@ void initMotorTimer() {
 }
 
 void initMainMotor() {
-	Pin pinEnable;
-	pinEnable.definitionRegister = &DDRA;
-	pinEnable.portRegister = &PORTA;
-	pinEnable.offset = PA0;
-
 	Pin pinDirection;
-	pinDirection.definitionRegister = &DDRA;
-	pinDirection.portRegister = &PORTA;
-	pinDirection.offset = PA1;
+	pinDirection.definitionRegister = &DDRD;
+	pinDirection.portRegister = &PORTD;
+	pinDirection.offset = PD6;
 
-	Motor_init(&s_mainMotor, pinEnable, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A);
+	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 1);
 }
 
 int main(void)
 {	
 	DDRD |= (1<<PD7); 						// PD7 is output
-	DDRD |= (1<<PD6); 						// PD6 is output
+	DDRC |= (1<<PC0); 						// PD6 is output
 	
-	PORTD |= (1 << PD6);
+	PORTC |= (1 << PC0);
 	
 	Clock_init(&s_clock, SERVO_TIMER_MS_PER_TICK);
 	
@@ -190,10 +186,11 @@ int main(void)
 	int8_t isWaiting = 0;
 	float servo_percent = 50;
 	
-	sei();
+	float motor_percent = 10;
+	float motor_percentageDirection = 1;
+	float motor_direction = 1;
 	
-	Motor_setEnable(&s_mainMotor, 1);
-	Motor_setDirection(&s_mainMotor, 0);
+	sei();
 	
 	while (42)
 	{
@@ -217,9 +214,31 @@ int main(void)
 				servo_percent = 0;
 			}
 			Servo_setPercent(servo_percent);
-			Motor_setSpeedPercent(&s_mainMotor, servo_percent);
 		} else {
 			waitingCycles--;
+		}
+
+		motor_percent += motor_percentageDirection * 10;
+		if(motor_percent > 100) {
+			motor_percent = 100;
+			motor_percentageDirection *= -1;
+		} else if(motor_percent < -100) {
+			motor_percent = -100;
+			motor_percentageDirection *= -1;
+		}
+		
+		Motor_setDirection(&s_mainMotor, motor_direction);
+		if(motor_percent < 0) {
+			Motor_setSpeedPercent(&s_mainMotor, -1 * motor_percent);			
+		} else {
+			Motor_setSpeedPercent(&s_mainMotor, motor_percent);			
+		}
+		if(motor_percent == 0) {
+			if(motor_direction == 0) {
+				motor_direction = 1;
+			} else {
+				motor_direction = 0;
+			}
 		}
 	}
 	return 0; 								// this line should never be reached
