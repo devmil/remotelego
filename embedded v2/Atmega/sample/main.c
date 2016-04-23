@@ -2,22 +2,131 @@
 #include <avr/interrupt.h>	// include interrupt support
 #include <util/delay.h>
 
-#define SERVO_PRESCALER 		1024
-#define SERVO_PRESCALER_BITS	(1<<CS00) | (1<<CS02)
-#define SERVO_TIMER_TICKS		255
-#define SERVO_EFFECTIVE_F		(F_CPU / SERVO_PRESCALER) //14745000 / 1024 = 14399
-#define SERVO_TIMER_PERIOD_MS	(((float)1000 * SERVO_TIMER_TICKS) / SERVO_EFFECTIVE_F)	//(1000 * 255) / 14399 = 17,70956316410862
-#define SERVO_TIMER_MS_PER_TICK	(SERVO_TIMER_PERIOD_MS / SERVO_TIMER_TICKS) //0,06944926731023
-#define SERVO_MIN_MS			0.8f
-#define SERVO_MAX_MS			2.3f
+#define SERVO_PRESCALER 			1024
+#define SERVO_PRESCALER_BITS		(1<<CS00) | (1<<CS02)
+#define SERVO_TIMER_TICKS			255
+#define SERVO_EFFECTIVE_F			(F_CPU / SERVO_PRESCALER) //14745000 / 1024 = 14399
+#define SERVO_TIMER_PERIOD_MS		(((float)1000 * SERVO_TIMER_TICKS) / SERVO_EFFECTIVE_F)	//(1000 * 255) / 14399 = 17,70956316410862
+#define SERVO_TIMER_MS_PER_TICK		(SERVO_TIMER_PERIOD_MS / SERVO_TIMER_TICKS) //0,06944926731023
+#define SERVO_MIN_MS				0.8f
+#define SERVO_MAX_MS				2.3f
 
-void setServoPercent(float percent) {
+#define MAIN_MOTOR_PRESCALER		1
+#define MAIN_MOTOR_PRESCALER_BITS	(1<<CS10)
+#define MAIN_MOTOR_TIMER_TICKS		255
+
+typedef struct {
+	float milliseconds;
+	uint8_t seconds;
+	uint8_t minutes;
+	uint8_t hours;
+	uint64_t days;
+} Duration;
+
+typedef struct {
+	float tickDurationMs;
+	Duration duration;
+} Clock;
+
+typedef struct {
+	volatile uint8_t* definitionRegister;
+	volatile uint8_t* portRegister;
+	uint8_t offset;
+} Pin;
+
+typedef struct {
+	Pin pinEnable;
+	Pin pinDirection;
+	uint16_t timerMax;
+	volatile uint16_t* timerCounterRegister;
+} Motor;
+
+void Clock_init(Clock* clock, float tickDurationMs) {
+	clock->tickDurationMs = tickDurationMs;
+}
+
+void Clock_tick(Clock* clock) {
+	Duration duration = clock->duration;
+	duration.milliseconds += clock->tickDurationMs;
+	if(duration.milliseconds >= 1000) {
+		duration.seconds++;
+		duration.milliseconds -= 1000;
+		if(duration.seconds >= 60) {
+			duration.minutes++;
+			duration.seconds -= 60;
+			if(duration.minutes >= 60) {
+				duration.hours++;
+				duration.minutes -= 60;
+				if(duration.hours >= 24) {
+					duration.days++;
+					duration.hours -= 24;
+				}
+			}
+		}
+	}
+	clock->duration = duration;
+}
+
+Duration Clock_getDuration(Clock* clock) {
+	cli();
+	Duration result = clock->duration;
+	sei();
+	return result;
+}
+
+void Pin_setMode(Pin* pin, uint8_t mode) {
+	if(mode != 0) {
+		*pin->definitionRegister |= (1 << pin->offset);
+	} else {
+		*pin->definitionRegister &= ~(1 << pin->offset);
+	}
+}
+
+void Pin_setValue(Pin* pin, uint8_t value) {
+	if(value != 0) {
+		*pin->portRegister |= (1 << pin->offset);
+	} else {
+		*pin->portRegister &= ~(1 << pin->offset);
+	}
+}
+
+void Motor_init(
+	Motor* motor,
+	Pin pinEnable,
+	Pin pinDirection,
+	uint16_t timerMax,
+	volatile uint16_t* timerCounterRegister) {
+		motor->pinEnable = pinEnable;
+		motor->pinDirection = pinDirection;
+		motor->timerMax = timerMax;
+		motor->timerCounterRegister = timerCounterRegister;
+		
+		Pin_setMode(&pinEnable, 1); //output
+		Pin_setValue(&pinEnable, 0);
+		Pin_setMode(&pinDirection, 1); //output
+		Pin_setValue(&pinDirection, 0);
+} 
+
+void Motor_setDirection(Motor* motor, uint8_t direction) {
+	Pin_setValue(&motor->pinDirection, direction);
+}
+
+void Motor_setEnable(Motor* motor, uint8_t enable) {
+	Pin_setValue(&motor->pinEnable, enable);
+}
+
+void Motor_setSpeedPercent(Motor* motor, float percent) {
+	float value = (motor->timerMax * percent) / 100;
+	*motor->timerCounterRegister = (uint8_t)value;
+}
+
+void Servo_setPercent(float percent) {
 	float servoMs = SERVO_MIN_MS + ((SERVO_MAX_MS - SERVO_MIN_MS) * percent) / 100;
 	float servoTicks = servoMs / SERVO_TIMER_MS_PER_TICK;
 	OCR0 = 255 - (int8_t)servoTicks;
 }
 
-void initServo() {
+void Servo_init() {
 	DDRB |= (1<<PB3); 						// PB3 == OC0 is servo output
 	PORTB |= (1<<PB3);						// pull down
 
@@ -26,20 +135,66 @@ void initServo() {
 	TCCR0 |= (1<<COM00);					// non inverted PWM
 	TCCR0 |= SERVO_PRESCALER_BITS;
 
-	setServoPercent(50);					//center servo	
+	Servo_setPercent(50);					//center servo	
+}
+
+Clock s_clock;
+Motor s_mainMotor;
+
+ISR( TIMER0_OVF_vect )
+{
+	Clock_tick(&s_clock);
+}
+
+void initMotorTimer() {
+	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM 
+	TCCR1A |= (1 << WGM10); //Timer1A: Fast PWM mode bit 1
+	TCCR1B |= (1 << WGM12); //Timer1A: Fast PWM mode bit 2
+	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; //Prescaler = 1
+	
+	DDRD |= (1<<PD5); 						// PD5=OC1A is output
+}
+
+void initMainMotor() {
+	Pin pinEnable;
+	pinEnable.definitionRegister = &DDRA;
+	pinEnable.portRegister = &PORTA;
+	pinEnable.offset = PA0;
+
+	Pin pinDirection;
+	pinDirection.definitionRegister = &DDRA;
+	pinDirection.portRegister = &PORTA;
+	pinDirection.offset = PA1;
+
+	Motor_init(&s_mainMotor, pinEnable, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A);
 }
 
 int main(void)
 {	
 	DDRD |= (1<<PD7); 						// PD7 is output
+	DDRD |= (1<<PD6); 						// PD6 is output
 	
-	initServo();
+	PORTD |= (1 << PD6);
+	
+	Clock_init(&s_clock, SERVO_TIMER_MS_PER_TICK);
+	
+	Servo_init();
+	
+	initMotorTimer();
+	initMainMotor();
+	
+	TIMSK |= (1<<TOIE0);					// enable timer overflow interrupt 
 
 	int8_t direction = 1;
 	int8_t waitingCycles = 0;
 	int8_t isWaiting = 0;
 	float servo_percent = 50;
 	
+	sei();
+	
+	Motor_setEnable(&s_mainMotor, 1);
+	Motor_setDirection(&s_mainMotor, 0);
+	
 	while (42)
 	{
 		_delay_ms(500); 					// wait some time
@@ -61,186 +216,11 @@ int main(void)
 				direction *= -1;
 				servo_percent = 0;
 			}
-			setServoPercent(servo_percent);
+			Servo_setPercent(servo_percent);
+			Motor_setSpeedPercent(&s_mainMotor, servo_percent);
 		} else {
 			waitingCycles--;
 		}
 	}
 	return 0; 								// this line should never be reached
 }
-
-// #define PRESCALER      		  1
-// #define PRESCALER_BITS  	  (1<<CS20)
-// #define TICKS_PER_SECOND      ( F_CPU / PRESCALER / 256 ) //57598
-// #define TICKS_PER_MILLISECOND ( TICKS_PER_SECOND / 1000 ) //58
-
-// typedef struct {
-// 	uint16_t counter;
-// 	uint16_t periodTimerTicks;
-// 	uint16_t minTimerTicks;
-// 	uint16_t maxTimerTicks;
-// 	uint16_t endTimerTicks;
-// } Servo;
-
-// Servo servo1;
-
-// void onServoTick(Servo* servo) {
-// 	servo->counter = servo->counter + 1;
-// 	if(servo->periodTimerTicks <= servo->counter) {
-// 		servo->counter = 0;
-// 		PORTD |= (1<<PD7);
-// 	}
-// 	if(servo->counter == servo->endTimerTicks) {
-// 		PORTD &= ~(1<<PD7);
-// 	}
-// }
-
-// void setServoPercent(Servo* servo, uint8_t percent) {
-// 	servo->endTimerTicks = servo->minTimerTicks + (((servo->maxTimerTicks - servo->minTimerTicks) * percent) / 100);
-// }
-
-// void initServo(Servo* servo, float periodMs, float minMs, float maxMs) {
-// 	servo->counter = 0;
-// 	servo->periodTimerTicks = (uint16_t)(TICKS_PER_MILLISECOND * periodMs);
-// 	servo->minTimerTicks = (uint16_t)(TICKS_PER_MILLISECOND * minMs);
-// 	servo->maxTimerTicks = (uint16_t)(TICKS_PER_MILLISECOND * maxMs);
-// 	setServoPercent(servo, 50);
-// }
-
-// void onTick() {
-// 	onServoTick(&servo1);
-// }
-
-// ISR( TIMER2_OVF_vect )
-// {
-// 	onTick();
-// }
-
-// int main(void)
-// {	
-// 	DDRD |= (1<<PD7); 						// PD7 is output
-// 	PORTD = (1<<PD7);
-	
-// 	initServo(&servo1, 20.0f, 0.75f, 2.3f);
-	
-// 	TCCR2 = PRESCALER_BITS;
-		
-// 	TIMSK |= (1<<TOIE2); //Overflow interrupt
-	
-// 	sei(); 									// enable interrupts
-	
-// 	int8_t direction = 1;
-// 	int8_t waitingCycles = 0;
-// 	int8_t isWaiting = 0;
-// 	int8_t servo_percent = 50;
-	
-// 	while (42)
-// 	{
-// 		_delay_ms(500); 					// wait some time
-		
-// 		if(!isWaiting && servo_percent == 50) {
-// 			if(waitingCycles == 0) {
-// 				isWaiting = 1;
-// 				waitingCycles = 6;
-// 			}
-// 		}
-// 		if(waitingCycles == 0) {
-// 			isWaiting = 0;
-// 			servo_percent += direction * 10;
-// 			if(servo_percent > 100) {
-// 				direction *= -1;
-// 				servo_percent = 100;
-// 			} else if(servo_percent < 0) {
-// 				direction *= -1;
-// 				servo_percent = 0;
-// 			}
-// 			cli(); 								// disable interrupts
-// 			setServoPercent(&servo1, servo_percent);
-// 			sei(); 								// enable interrupts
-// 		} else {
-// 			waitingCycles--;
-// 		}
-		
-		
-// 	}
-// 	return 0; 								// this line should never be reached
-// }
-
-
-/*
-#define TICKS_PERIOD		  ( F_CPU / PRESCALER / 50 ) //20ms
-#define TICKS_MILLISEC_BASE   ( TICKS_PERIOD / 20 ) 
-#define TICKS_CENTER          ( TICKS_MILLISEC_BASE / 2 )
-#define TICKS_MILLISEC_MIN    ( TICKS_PERIOD / 25 ) //0,8ms
-#define TICKS_MILLISEC_CENTER ( TICKS_PERIOD / 13 ) //1,5ms
-#define TICKS_MILLISEC_MAX    ( TICKS_PERIOD / 9 ) //2,22ms
-#define TICKS_MILLISEC_100P   ( TICKS_MILLISEC_MAX - TICKS_MILLISEC_MIN ) 
-
-int8_t servo_percent = 0;
-uint8_t pin_state = 0;
-
-ISR( TIMER1_COMPA_vect )
-{
-	uint16_t active_time_ticks = (((TICKS_MILLISEC_100P * servo_percent) / 100) + TICKS_MILLISEC_MIN);
-	
-	if(!pin_state) {
-		OCR1A = active_time_ticks;
-		pin_state = 1;
-	} else {
-		OCR1A = TICKS_PERIOD - active_time_ticks;		
-		pin_state = 0;
-	}
-  //OCR1A = 2500-OCR1A;
-}
-
-int main(void)
-{	
-	DDRD |= (1<<PD7); 						// PD7 is output
-	
-	DDRD |= (1<<PD5); 						// PD5 == OC1A is servo output
-	
-	TCCR1A = (1<<COM1A0); 					// toggle on compare match
-	TCCR1B = (1<<WGM12) | PRESCALER_BITS; 	// CTC mode + Prescaler
-	TIMSK  = (1<<OCIE1A); 					// enable timer compare interrupt
-	
-	OCR1A = 1;
-	
-	sei(); 									// enable interrupts
-	
-	int8_t direction = 1;
-	int8_t waitingCycles = 0;
-	int8_t isWaiting = 0;
-	
-	while (42)
-	{
-		_delay_ms(500); 					// wait some time
-		PORTD ^= (1<<PD7); 					// toggle PD7
-		
-		cli(); 								// disable interrupts
-		
-		if(!isWaiting && servo_percent == 50) {
-			if(waitingCycles == 0) {
-				isWaiting = 1;
-				waitingCycles = 6;
-			}
-		}
-		if(waitingCycles == 0) {
-			isWaiting = 0;
-			servo_percent += direction * 10;
-			if(servo_percent > 100) {
-				direction *= -1;
-				servo_percent = 100;
-			} else if(servo_percent < 0) {
-				direction *= -1;
-				servo_percent = 0;
-			}
-		} else {
-			waitingCycles--;
-		}
-		
-		sei(); 								// enable interrupts
-	}
-	return 0; 								// this line should never be reached
-}
-
-*/
