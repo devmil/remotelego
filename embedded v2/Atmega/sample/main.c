@@ -1,6 +1,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>	// include interrupt support
 #include <util/delay.h>
+#include <stdlib.h>
+
+#include "uart.h"
 
 #define SERVO_PRESCALER 			1024
 #define SERVO_PRESCALER_BITS		(1<<CS00) | (1<<CS02)
@@ -14,6 +17,8 @@
 #define MAIN_MOTOR_PRESCALER		1
 #define MAIN_MOTOR_PRESCALER_BITS	(1<<CS10)
 #define MAIN_MOTOR_TIMER_TICKS		255
+
+#define UART_BAUDRATE				19200
 
 typedef struct {
 	float milliseconds;
@@ -165,14 +170,93 @@ void initMainMotor() {
 	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 1);
 }
 
+int8_t s_test_direction = 1;
+int8_t s_test_waitingCycles = 0;
+int8_t s_test_isWaiting = 0;
+float s_test_servo_percent = 50;
+
+float s_test_motor_percent = 10;
+float s_test_motor_percentageDirection = 1;
+float s_test_motor_direction = 1;
+
+
+void nextTestStep() {
+	PORTD ^= (1<<PD7); 					// toggle PD7
+		
+	if(!s_test_isWaiting && s_test_servo_percent == 50) {
+		if(s_test_waitingCycles == 0) {
+			s_test_isWaiting = 1;
+			s_test_waitingCycles = 6;
+		}
+	}
+	if(s_test_waitingCycles == 0) {
+		s_test_isWaiting = 0;
+		s_test_servo_percent += s_test_direction * 10;
+		if(s_test_servo_percent > 100) {
+			s_test_direction *= -1;
+			s_test_servo_percent = 100;
+		} else if(s_test_servo_percent < 0) {
+			s_test_direction *= -1;
+			s_test_servo_percent = 0;
+		}
+		Servo_setPercent(s_test_servo_percent);
+	} else {
+		s_test_waitingCycles--;
+	}
+
+	s_test_motor_percent += s_test_motor_percentageDirection * 10;
+	if(s_test_motor_percent > 100) {
+		s_test_motor_percent = 100;
+		s_test_motor_percentageDirection *= -1;
+	} else if(s_test_motor_percent < -100) {
+		s_test_motor_percent = -100;
+		s_test_motor_percentageDirection *= -1;
+	}
+
+	Motor_setDirection(&s_mainMotor, s_test_motor_direction);
+	if(s_test_motor_percent < 0) {
+		Motor_setSpeedPercent(&s_mainMotor, -1 * s_test_motor_percent);			
+	} else {
+		Motor_setSpeedPercent(&s_mainMotor, s_test_motor_percent);			
+	}
+	if(s_test_motor_percent == 0) {
+		if(s_test_motor_direction == 0) {
+			s_test_motor_direction = 1;
+		} else {
+			s_test_motor_direction = 0;
+		}
+	}
+		Duration duration = Clock_getDuration(&s_clock);
+	
+	char buffMinutes[16];
+	itoa(duration.minutes, buffMinutes, 10);
+	uart_puts(buffMinutes);
+	uart_puts("m: ");
+	char buffSeconds[16];
+	itoa(duration.seconds, buffSeconds, 10);
+	uart_puts(buffSeconds);
+	uart_puts("s ");
+	char buff[10];
+	itoa((int)s_test_motor_percent, buff, 10);
+	uart_puts("Motor: ");
+	uart_puts(buff);
+	uart_puts("%");
+	uart_puts(", Servo: ");
+	itoa((int)s_test_servo_percent, buff, 10);
+	uart_puts(buff);
+	uart_puts("%");
+	uart_puts("\r\n");	
+}
+
 int main(void)
 {	
+	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
 	DDRD |= (1<<PD7); 						// PD7 is output
 	DDRC |= (1<<PC0); 						// PD6 is output
 	
 	PORTC |= (1 << PC0);
 	
-	Clock_init(&s_clock, SERVO_TIMER_MS_PER_TICK);
+	Clock_init(&s_clock, SERVO_TIMER_PERIOD_MS);
 	
 	Servo_init();
 	
@@ -181,65 +265,23 @@ int main(void)
 	
 	TIMSK |= (1<<TOIE0);					// enable timer overflow interrupt 
 
-	int8_t direction = 1;
-	int8_t waitingCycles = 0;
-	int8_t isWaiting = 0;
-	float servo_percent = 50;
-	
-	float motor_percent = 10;
-	float motor_percentageDirection = 1;
-	float motor_direction = 1;
-	
 	sei();
 	
+	uint16_t delay_ms = 500;
+	uint16_t nextMilliseconds = 0;
+
 	while (42)
 	{
-		_delay_ms(500); 					// wait some time
-		PORTD ^= (1<<PD7); 					// toggle PD7
-		
-		if(!isWaiting && servo_percent == 50) {
-			if(waitingCycles == 0) {
-				isWaiting = 1;
-				waitingCycles = 6;
-			}
-		}
-		if(waitingCycles == 0) {
-			isWaiting = 0;
-			servo_percent += direction * 10;
-			if(servo_percent > 100) {
-				direction *= -1;
-				servo_percent = 100;
-			} else if(servo_percent < 0) {
-				direction *= -1;
-				servo_percent = 0;
-			}
-			Servo_setPercent(servo_percent);
+		Duration duration = Clock_getDuration(&s_clock);
+		uint16_t totalMilliseconds = duration.seconds * 1000 + (uint16_t)duration.milliseconds;
+
+		if(totalMilliseconds > nextMilliseconds) {
+			nextTestStep();
+			nextMilliseconds += delay_ms;
 		} else {
-			waitingCycles--;
+			_delay_ms(10);
 		}
 
-		motor_percent += motor_percentageDirection * 10;
-		if(motor_percent > 100) {
-			motor_percent = 100;
-			motor_percentageDirection *= -1;
-		} else if(motor_percent < -100) {
-			motor_percent = -100;
-			motor_percentageDirection *= -1;
-		}
-		
-		Motor_setDirection(&s_mainMotor, motor_direction);
-		if(motor_percent < 0) {
-			Motor_setSpeedPercent(&s_mainMotor, -1 * motor_percent);			
-		} else {
-			Motor_setSpeedPercent(&s_mainMotor, motor_percent);			
-		}
-		if(motor_percent == 0) {
-			if(motor_direction == 0) {
-				motor_direction = 1;
-			} else {
-				motor_direction = 0;
-			}
-		}
 	}
 	return 0; 								// this line should never be reached
 }
