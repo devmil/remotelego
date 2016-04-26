@@ -8,7 +8,7 @@ OBJECTS = main.o uart.o
 HEX_FLASH_FLAGS = -R .eeprom -R .fuse -R .lock -R .signature
 COMMON = -mmcu=$(MCU)
 CPU_FREQUENCY = 14745000UL
-CFLAGS += $(COMMON) -I$(AVRLIB) -I. -std=gnu99 -Wall -Wextra -DF_CPU=$(CPU_FREQUENCY) -DUART_RX_BUFFER_SIZE=128 -DUART_TX_BUFFER_SIZE=128 -gdwarf-2 -Os -fpack-struct -fshort-enums -ffunction-sections -fdata-sections -Wno-deprecated-declarations
+CFLAGS += $(COMMON) -I$(AVRLIB) -I. -std=gnu99 -Wall -Wextra -DF_CPU=$(CPU_FREQUENCY) -DUART_RX_BUFFER_SIZE=128 -DUART_TX_BUFFER_SIZE=128 -gdwarf-2 -Os -fpack-struct -fshort-enums -ffunction-sections -fdata-sections -Wno-deprecated-declarations -DUART_RX_BUFFER_SIZE=64 -DUART_TX_BUFFER_SIZE=64
 LDFLAGS += $(COMMON) -Wl,--gc-sections
 
 
