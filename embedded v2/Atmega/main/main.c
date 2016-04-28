@@ -20,7 +20,7 @@
 #define MAIN_MOTOR_PRESCALER_BITS	(1<<CS10)
 #define MAIN_MOTOR_TIMER_TICKS		255
 
-#define UART_BAUDRATE				38400
+#define UART_BAUDRATE				115200
 
 #define RECEIVER_BUFF_SIZE 128
 
@@ -368,6 +368,7 @@ int main(void)
 	uint16_t delay_ms = 500;
 	uint16_t nextMilliseconds = 0;
 	uint8_t lastMinute = 0;
+	uint16_t lastSeconds = 0;
 
 	wdt_enable(WDTO_120MS);
 
@@ -383,12 +384,15 @@ int main(void)
 			lastMinute = duration.minutes;
 			nextMilliseconds -= 60ul * 1000ul;
 		}
+		
+		if(lastSeconds != duration.seconds) {
+			lastSeconds = duration.seconds;
+		}
 
 		if(totalMillisecondsThisMinute > nextMilliseconds) {
 			nextTestStep();
 			nextMilliseconds += delay_ms;
 		}
-		_delay_ms(10);
 		wdt_reset();
 	}
 	return 0; 								// this line should never be reached

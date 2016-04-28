@@ -1,4 +1,4 @@
-PROJECT=atmega32_sample
+PROJECT=legocontrol_atmega
 MCU=atmega32
 MCU_AVRDUDE=m32
 OBJECTS = main.o uart.o
@@ -31,9 +31,14 @@ flash: $(PROJECT).hex
 
 #sets the AVR to use a fast external oscillator
 #http://www.engbedded.com/fusecalc/
+
+#Default
+#+ Ext. Crystal/Resonator High Freq.; Start-up time: 16K CK + 64 ms; [CKSEL=1111 SUT=11]
+#+ Brown out detection
+#+ CKOPT
 .PHONY: prepare_avr
 prepare_avr:
-	avrdude -p $(MCU_AVRDUDE) -c usbasp -B 3 -U lfuse:w:0xff:m -U hfuse:w:0x99:m
+	avrdude -p $(MCU_AVRDUDE) -c usbasp -B 3 -U lfuse:w:0xbf:m -U hfuse:w:0x89:m
 
 .PHONY: clean
 clean:
