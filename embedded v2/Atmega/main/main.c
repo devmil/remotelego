@@ -50,13 +50,6 @@ typedef struct {
 	volatile uint16_t* timerCounterRegister;
 } Motor;
 
-void uart_puti(uint32_t integer) {
-	char buff[32];
-	buff[31] = '\0';
-	ltoa(integer, buff, 10);
-	uart_puts(buff);
-}
-
 void Clock_init(Clock* clock, float tickDurationMs) {
 	clock->tickDurationMs = tickDurationMs;
 	Duration initDuration;
@@ -200,16 +193,6 @@ void initMainMotor() {
 	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 1);
 }
 
-int8_t s_test_direction = 1;
-int8_t s_test_waitingCycles = 0;
-int8_t s_test_isWaiting = 0;
-float s_test_servo_percent = 50;
-
-float s_test_motor_percent = 10;
-float s_test_motor_percentageDirection = 1;
-float s_test_motor_direction = 1;
-
-
 void nextTestStep() {
 	PORTD ^= (1<<PD7); 					// toggle PD7	
 }
@@ -272,14 +255,13 @@ void handleCommands() {
 	uart_puts("\\r");
 	uart_puts("nc=");
 	char buff[12];
-	buff[11] = '\0';
 	itoa(numOfCommands, buff, 10);
+	buff[11] = '\0';
 	uart_puts(buff);
 	uart_puts("/\r\n");
 	
 	s_inCommand = 0;
 	s_uartRcvBufferPos = 0;
-	
 }
 
 void cancelCommand() {
@@ -368,7 +350,6 @@ int main(void)
 	uint16_t delay_ms = 500;
 	uint16_t nextMilliseconds = 0;
 	uint8_t lastMinute = 0;
-	uint16_t lastSeconds = 0;
 
 	wdt_enable(WDTO_120MS);
 
@@ -385,10 +366,6 @@ int main(void)
 			nextMilliseconds -= 60ul * 1000ul;
 		}
 		
-		if(lastSeconds != duration.seconds) {
-			lastSeconds = duration.seconds;
-		}
-
 		if(totalMillisecondsThisMinute > nextMilliseconds) {
 			nextTestStep();
 			nextMilliseconds += delay_ms;
