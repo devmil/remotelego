@@ -31,6 +31,7 @@ const char* COMMAND_PING 			= "pp";
 const char* COMMAND_SERVO_PERCENT 	= "sp";
 const char* COMMAND_MOTOR_SPEED 	= "ms";
 const char* COMMAND_MOTOR_DIRECTION	= "md";
+const char* COMMAND_STATUS_COLOR	= "sc";
 
 typedef struct {
 	double milliseconds;
@@ -57,6 +58,12 @@ typedef struct {
 	uint8_t isInverted;
 	volatile uint16_t* timerCounterRegister;
 } Motor;
+
+typedef struct {
+	Pin pinRed;
+	Pin pinGreen;
+	Pin pinBlue;
+} RgbLed;
 
 void Clock_init(Clock* clock, float tickDurationMs) {
 	clock->tickDurationMs = tickDurationMs;
@@ -98,6 +105,12 @@ Duration Clock_getDuration(Clock* clock) {
 	return result;
 }
 
+void Pin_init(Pin* pin, volatile uint8_t* definitionRegister, volatile uint8_t* portRegister, uint8_t offset) {
+	pin->definitionRegister = definitionRegister;
+	pin->portRegister = portRegister;
+	pin->offset = offset;
+}
+
 void Pin_setMode(Pin* pin, uint8_t mode) {
 	if(mode != 0) {
 		*pin->definitionRegister |= (1 << pin->offset);
@@ -112,6 +125,22 @@ void Pin_setValue(Pin* pin, uint8_t value) {
 	} else {
 		*pin->portRegister &= ~(1 << pin->offset);
 	}
+}
+
+void RgbLed_init(RgbLed* led, Pin pinRed, Pin pinGreen, Pin pinBlue) {
+	led->pinRed = pinRed;
+	led->pinGreen = pinGreen;
+	led->pinBlue = pinBlue;
+}
+
+void RgbLed_setColor(RgbLed* rgbLed, uint32_t color) {
+	uint8_t b = (uint8_t)(color >> 0);
+	uint8_t g = (uint8_t)(color >> 8);
+	uint8_t r = (uint8_t)(color >> 16);
+	
+	Pin_setValue(&rgbLed->pinRed, r > 0 ? 1 : 0);
+	Pin_setValue(&rgbLed->pinGreen, g > 0 ? 1 : 0);
+	Pin_setValue(&rgbLed->pinBlue, b > 0 ? 1 : 0);
 }
 
 void Motor_setSpeedPercent(Motor* motor, float percent);
@@ -177,6 +206,7 @@ void Servo_init() {
 
 Clock s_clock;
 Motor s_mainMotor;
+RgbLed s_stateLed;
 
 volatile float s_millisecondsSinceLastControl = 0;
 uint8_t s_controllerTimeoutReached = 0;
@@ -217,11 +247,19 @@ void initMotorTimer() {
 
 void initMainMotor() {
 	Pin pinDirection;
-	pinDirection.definitionRegister = &DDRD;
-	pinDirection.portRegister = &PORTD;
-	pinDirection.offset = PD6;
+	Pin_init(&pinDirection, &DDRD, &PORTD, PD6);
 
 	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 1);
+}
+
+void initStatusLed() {
+	Pin pinRed;
+	Pin_init(&pinRed, &DDRA, &PORTA, PA0);
+	Pin pinGreen;
+	Pin_init(&pinGreen, &DDRA, &PORTA, PA1);
+	Pin pinBlue;
+	Pin_init(&pinBlue, &DDRA, &PORTA, PA2);
+	RgbLed_init(&s_stateLed, pinRed, pinGreen, pinBlue);
 }
 
 void nextTestStep() {
@@ -248,6 +286,10 @@ uint8_t handleCommand(char* command, char* value) {
 	} else if(strcmp(command, COMMAND_SERVO_PERCENT) == 0) {
 		int intVal = atoi(value);
 		Servo_setPercent(intVal);
+		result = 1;
+	} else if(strcmp(command, COMMAND_STATUS_COLOR) == 0) {
+		uint32_t color = strtoul(value, (char**)0, 0);
+		RgbLed_setColor(&s_stateLed, color);
 		result = 1;
 	}
 	return result;
@@ -382,6 +424,9 @@ int main(void)
 	
 	initMotorTimer();
 	initMainMotor();
+	initStatusLed();
+	
+	RgbLed_setColor(&s_stateLed, 0xFF0000); //Red
 	
 	TIMSK |= (1<<TOIE0);					// enable timer overflow interrupt 
 
@@ -399,6 +444,7 @@ int main(void)
 	while (42)
 	{
 		handleUart();
+		
 		if(checkControllerTimeoutReached()) {
 			handleControllerTimeout();			
 		}
