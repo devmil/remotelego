@@ -278,10 +278,15 @@ void sendCommands(String commands, uint8_t numOfCommands) {
   s_failCount = 0;
 }
 
+void pingAVR() {
+  sendCommands("\\cpp/", 1);
+}
+
 uint8_t s_state = 0;
 uint8_t s_advertisingState = 1;
 
 void loop() {
+  pingAVR(); //this currently pings the AVR every 500ms as we have a 500ms loop delay
   //this doesn't work as switching the advertising frequently breaks both mechanisms: BLE clients can't connect and the physical web can't see the beacon
   if(s_advertisingState == 0) {
     //advertiseServices(1);    

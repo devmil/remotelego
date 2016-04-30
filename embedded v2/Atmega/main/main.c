@@ -22,7 +22,15 @@
 
 #define UART_BAUDRATE				115200
 
-#define RECEIVER_BUFF_SIZE 128
+#define RECEIVER_BUFF_SIZE 			128
+
+#define CONTROLLER_TIMEOUT_MS		1000
+
+//Commands
+const char* COMMAND_PING 			= "pp";
+const char* COMMAND_SERVO_PERCENT 	= "sp";
+const char* COMMAND_MOTOR_SPEED 	= "ms";
+const char* COMMAND_MOTOR_DIRECTION	= "md";
 
 typedef struct {
 	double milliseconds;
@@ -170,9 +178,32 @@ void Servo_init() {
 Clock s_clock;
 Motor s_mainMotor;
 
+volatile float s_millisecondsSinceLastControl = 0;
+uint8_t s_controllerTimeoutReached = 0;
+
+uint8_t checkControllerTimeoutReached() {
+	if(s_controllerTimeoutReached) {
+		return s_controllerTimeoutReached;
+	}
+	if(s_millisecondsSinceLastControl > CONTROLLER_TIMEOUT_MS) {
+		s_controllerTimeoutReached = 1;
+	}
+	return s_controllerTimeoutReached;
+}
+
+void resetControllerTimeout() {
+	s_millisecondsSinceLastControl = 0;
+	s_controllerTimeoutReached = 0;
+}
+
+void increaseControllerTimeout(float ms) {
+	s_millisecondsSinceLastControl += ms;
+}
+
 ISR( TIMER0_OVF_vect )
 {
 	Clock_tick(&s_clock);
+	increaseControllerTimeout(s_clock.tickDurationMs);
 }
 
 void initMotorTimer() {
@@ -204,15 +235,17 @@ uint8_t s_inCommand = 0;
 
 uint8_t handleCommand(char* command, char* value) {
 	uint8_t result = 0;
-	if(strcmp(command, "ms") == 0) {
+	if(strcmp(command, COMMAND_PING) == 0) {
+		result = 1;
+	} else if(strcmp(command, COMMAND_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
 		Motor_setSpeedPercent(&s_mainMotor, (float)doubleVal);
 		result = 1;
-	} else if(strcmp(command, "md") == 0) {
+	} else if(strcmp(command, COMMAND_MOTOR_DIRECTION) == 0) {
 		int intVal = atoi(value);
 		Motor_setDirection(&s_mainMotor, intVal != 0 ? 1 : 0);
 		result = 1;
-	} else if(strcmp(command, "sp") == 0) {
+	} else if(strcmp(command, COMMAND_SERVO_PERCENT) == 0) {
 		int intVal = atoi(value);
 		Servo_setPercent(intVal);
 		result = 1;
@@ -220,7 +253,7 @@ uint8_t handleCommand(char* command, char* value) {
 	return result;
 }
 
-void handleCommands() {
+uint8_t handleCommands() {
 	uint8_t inVal = 0;
 	char commandBuff[20] = "";
 	char valBuff[20] = "";
@@ -262,6 +295,8 @@ void handleCommands() {
 	
 	s_inCommand = 0;
 	s_uartRcvBufferPos = 0;
+	
+	return numOfCommands;
 }
 
 void cancelCommand() {
@@ -269,36 +304,37 @@ void cancelCommand() {
 	s_uartRcvBufferPos = 0;
 }
 
-void handlePotentialCommand(char c) {
+uint8_t handlePotentialCommand(char c) {
 	if(!s_backslashReceived 
 		&& !s_inCommand
 		&& s_uartRcvBufferPos == 0) {
 		//wait for the beginning
 		if(c != '\\') {
-			return;
+			return 0;
 		}
 		s_backslashReceived = 1;
-		return;
+		return 0;
 	}
 	if(s_backslashReceived) {
 		s_backslashReceived = 0;
 		if(c != 'c' && c != 'C') {
-			return;
+			return 0;
 		}
 		s_inCommand = 1;
-		return;
+		return 0;
 	}
 	if(s_inCommand) {
 		if(c == '/') {
-			handleCommands();
-			return;
+			uint8_t numCmds = handleCommands();
+			return numCmds;
 		}
 		s_uartRcvBuffer[s_uartRcvBufferPos] = c;
 		s_uartRcvBufferPos++;
 		if(s_uartRcvBufferPos >= RECEIVER_BUFF_SIZE) {
 			cancelCommand();
 		}
-	}	
+	}
+	return 0;
 }
 
 void handleUart() {
@@ -311,9 +347,16 @@ void handleUart() {
 		resultErrorCode = (uint8_t)(getResult >> 8);
 		
 		if (resultErrorCode == 0) {
-			handlePotentialCommand(c);
+			if(handlePotentialCommand(c)) {
+				resetControllerTimeout();
+			}
 		}
 	} while(resultErrorCode == 0);
+}
+
+void handleControllerTimeout() {
+	Motor_setSpeedPercent(&s_mainMotor, 0);
+	Servo_setPercent(50);
 }
 
 int main(void)
@@ -356,6 +399,9 @@ int main(void)
 	while (42)
 	{
 		handleUart();
+		if(checkControllerTimeoutReached()) {
+			handleControllerTimeout();			
+		}
 		Duration duration = Clock_getDuration(&s_clock);
 
 		uint32_t totalMillisecondsThisMinute = (uint32_t)duration.milliseconds;
