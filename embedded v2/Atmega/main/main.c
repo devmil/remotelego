@@ -60,9 +60,16 @@ typedef struct {
 } Motor;
 
 typedef struct {
-	Pin pinRed;
-	Pin pinGreen;
-	Pin pinBlue;
+	Pin pin;
+	uint8_t counter;
+	uint8_t value;
+	uint8_t lastPinValue;
+} SoftPwmPin;
+
+typedef struct {
+	SoftPwmPin pinRed;
+	SoftPwmPin pinGreen;
+	SoftPwmPin pinBlue;
 } RgbLed;
 
 void Clock_init(Clock* clock, float tickDurationMs) {
@@ -127,10 +134,44 @@ void Pin_setValue(Pin* pin, uint8_t value) {
 	}
 }
 
+void SoftPwmPin_init(SoftPwmPin* softPwmPin, Pin pin) {
+	softPwmPin->counter = 0;
+	softPwmPin->value = 0;
+	softPwmPin->pin = pin;
+	softPwmPin->lastPinValue = 0;
+	Pin_setMode(&pin, 1);
+	Pin_setValue(&pin, 0);
+}
+
+void SoftPwmPin_setValue(SoftPwmPin* softPwmPin, uint8_t value) {
+	softPwmPin->value = value;
+}
+
+void SoftPwmPin_tick(SoftPwmPin* softPwmPin) {
+	softPwmPin->counter++;
+	uint8_t newValue = (softPwmPin->counter > softPwmPin->value) ? 0 : 1;
+	if(newValue != softPwmPin->lastPinValue) {
+		Pin_setValue(&softPwmPin->pin, newValue);
+		softPwmPin->lastPinValue = newValue;
+	}
+}
+
 void RgbLed_init(RgbLed* led, Pin pinRed, Pin pinGreen, Pin pinBlue) {
-	led->pinRed = pinRed;
-	led->pinGreen = pinGreen;
-	led->pinBlue = pinBlue;
+	SoftPwmPin ppRed;
+	SoftPwmPin_init(&ppRed, pinRed);
+	SoftPwmPin ppGreen;
+	SoftPwmPin_init(&ppGreen, pinGreen);
+	SoftPwmPin ppBlue;
+	SoftPwmPin_init(&ppBlue, pinBlue);
+	led->pinRed = ppRed;
+	led->pinGreen = ppGreen;
+	led->pinBlue = ppBlue;
+}
+
+void RgbLed_tick(RgbLed* led) {
+	SoftPwmPin_tick(&led->pinRed);
+	SoftPwmPin_tick(&led->pinGreen);
+	SoftPwmPin_tick(&led->pinBlue);
 }
 
 void RgbLed_setColor(RgbLed* rgbLed, uint32_t color) {
@@ -138,9 +179,9 @@ void RgbLed_setColor(RgbLed* rgbLed, uint32_t color) {
 	uint8_t g = (uint8_t)(color >> 8);
 	uint8_t r = (uint8_t)(color >> 16);
 	
-	Pin_setValue(&rgbLed->pinRed, r > 0 ? 1 : 0);
-	Pin_setValue(&rgbLed->pinGreen, g > 0 ? 1 : 0);
-	Pin_setValue(&rgbLed->pinBlue, b > 0 ? 1 : 0);
+	SoftPwmPin_setValue(&rgbLed->pinRed, r);
+	SoftPwmPin_setValue(&rgbLed->pinGreen, g);
+	SoftPwmPin_setValue(&rgbLed->pinBlue, b);
 }
 
 void Motor_setSpeedPercent(Motor* motor, float percent);
@@ -444,6 +485,7 @@ int main(void)
 	while (42)
 	{
 		handleUart();
+		RgbLed_tick(&s_stateLed);
 		
 		if(checkControllerTimeoutReached()) {
 			handleControllerTimeout();			
