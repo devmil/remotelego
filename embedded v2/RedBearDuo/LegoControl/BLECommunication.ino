@@ -220,8 +220,5 @@ void BLE_configure() {
 
   BLE_advertiseServices(0);
 
-
-  delay(100);
-
   AVR_sendCommands("\\csc=0x00FF00/", 1); //state = green
 }
