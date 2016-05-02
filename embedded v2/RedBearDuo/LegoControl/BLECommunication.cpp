@@ -6,7 +6,7 @@ void BLE_configure() {
         switch (s){
           case BLE_STATUS_OK:
               Serial.println("Device connected!");
-              AVR_sendCommands("\\csc=0x0000FF/", 1);
+              AVRProtocol::send(AVRCommandFactory::createStatusColorCommand(0x0000FF));
               break;
           default:
               Serial.println("Device almost connected!");
@@ -15,12 +15,12 @@ void BLE_configure() {
     });
   Bluetooth::getInstance()->setDeviceDisconnectedCallback([&](uint16_t h) {
       Serial.println("Disconnected.");
-      AVR_stopAll();
-      AVR_sendCommands("\\csc=0x00FF00/", 1);
+      AVRProtocol::stopAll();
+      AVRProtocol::send(AVRCommandFactory::createStatusColorCommand(0x00FF00));
     });
   Bluetooth::getInstance()->init(BLE_DEVICE_NAME);
 
   Bluetooth::getInstance()->advertiseServices();
 
-  AVR_sendCommands("\\csc=0x00FF00/", 1); //state = green
+  AVRProtocol::send(AVRCommandFactory::createStatusColorCommand(0x00FF00));
 }

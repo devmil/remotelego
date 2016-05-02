@@ -30,10 +30,11 @@ protected:
         return;
       }
       int8_t percent = data[0];
-      uint8_t direction = percent < 0 ? 0 : 1;
-      uint8_t speed = (uint8_t)abs(percent);
-      String command = "\\cms=" + String(speed) + "|md=" + String(direction) + "/";
-      AVR_sendCommands(command, 2);
+      AVRProtocol::send(
+        { 
+          AVRCommandFactory::createMotorSpeedCommand(abs(percent)),
+          AVRCommandFactory::createMotorDirectionCommand(percent > 0) 
+        });
     }
 };
 
@@ -58,10 +59,7 @@ protected:
         return;
       }
       int8_t angle = data[0]; //range = -90 - 90
-      float fraction = (angle + 90.0f) / 180.0f;
-      uint8_t percent = fabs(fraction) * 100u;
-      String command = "\\csp=" + String(percent) + "/";
-      AVR_sendCommands(command, 1);
+      AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(angle));
     }
 };
 

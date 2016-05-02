@@ -15,7 +15,8 @@ void setup() {
   pinMode(led, OUTPUT);
   Serial.begin(115200);
 
-  AVR_configure();
+  AVRProtocol::init();
+
   BLE_configure();
 }
 
@@ -23,7 +24,7 @@ uint8_t s_state = 0;
 uint8_t s_advertisingState = 1;
 
 void loop() {
-  AVR_ping(); //this currently pings the AVR every 500ms as we have a 500ms loop delay
+  AVRProtocol::ping(); //this currently pings the AVR every 500ms as we have a 500ms loop delay
   //this doesn't work as switching the advertising frequently breaks both mechanisms: BLE clients can't connect and the physical web can't see the beacon
   if(s_advertisingState == 0) {
     //BLE_advertiseServices(1);    
