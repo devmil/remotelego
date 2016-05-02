@@ -64,8 +64,15 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
       }
       return;
     }
-    Serial1.flush();
+    //clear serial receive buffer
+    int availableBytes = Serial1.available();
+    if(availableBytes > 0) {
+      std::vector<char> buff(availableBytes);
+      Serial1.readBytes(&buff[0], availableBytes);
+    }
     Serial1.print(commandString);
+    Serial1.flush();
+    //TODO: await echo and then result
     String result = Serial1.readStringUntil('/');
     ok = result.indexOf(awaitedResult) >= 0;
     if(!ok) {
