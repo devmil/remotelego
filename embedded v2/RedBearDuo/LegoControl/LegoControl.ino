@@ -4,6 +4,9 @@ SYSTEM_MODE(MANUAL);//do not connect to cloud
 SYSTEM_MODE(AUTOMATIC);//connect to cloud
 #endif
 
+#include "AVRCommunication.h"
+#include "BLECommunication.h"
+
 int led = D7; 
 
 uint16_t DELAY_MS = 500;

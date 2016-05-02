@@ -1,3 +1,5 @@
+#include "AVRCommunication.h"
+
 uint16_t s_AVR_failCount=0;
 
 void AVR_configure() {
