@@ -6,6 +6,7 @@ SYSTEM_MODE(AUTOMATIC);//connect to cloud
 
 #include "AVRCommunication.h"
 #include "BLECommunication.h"
+#include "NANOCommunication.h"
 
 int led = D7; 
 
@@ -18,6 +19,8 @@ void setup() {
   AVRProtocol::init();
 
   BLE_configure();
+
+  BLENano::init();
 }
 
 uint8_t s_state = 0;
@@ -25,6 +28,7 @@ uint8_t s_advertisingState = 1;
 
 void loop() {
   AVRProtocol::ping(); //this currently pings the AVR every 500ms as we have a 500ms loop delay
+  BLENano::ensureEddystoneUrl("https://www.devmil.de");
   //this doesn't work as switching the advertising frequently breaks both mechanisms: BLE clients can't connect and the physical web can't see the beacon
   if(s_advertisingState == 0) {
     //BLE_advertiseServices(1);    

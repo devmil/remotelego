@@ -68,20 +68,14 @@ public:
     using DeviceDisconnectedCallback = std::function<void(uint16_t)>;
     Bluetooth();
     virtual ~Bluetooth();
-    void init(std::string deviceName);
-    void setDeviceConnectedCallback(DeviceConnectedCallback cb);
-    void setDeviceDisconnectedCallback(DeviceDisconnectedCallback cb);
-    void addService(BluetoothService::Ptr service);
-    void advertiseServices();
-    void advertiseEddystoneUrl(std::string url);
 
-    static Bluetooth::Ptr getInstance();
+    static void init(std::string deviceName);
+    static void setDeviceConnectedCallback(DeviceConnectedCallback cb);
+    static void setDeviceDisconnectedCallback(DeviceDisconnectedCallback cb);
+    static void addService(BluetoothService::Ptr service);
+    static void advertiseServices();
+    static void advertiseEddystoneUrl(std::string url);
 
-    //
-    void onDeviceConnected(BLEStatus_t status, uint16_t handle);
-    void onDeviceDisconnected(uint16_t handle);
-    uint16_t onDataRead(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size);
-    int onDataWrite(uint16_t value_handle, uint8_t *buffer, uint16_t size);
 private:
     bool m_isInitialized;
     std::string m_deviceName;
@@ -93,6 +87,15 @@ private:
     DeviceDisconnectedCallback m_deviceDisconnectedCallback;
     std::vector<BluetoothService::Ptr> m_services;
 
+    static Bluetooth::Ptr getInstance();
+
+    void init_internal(std::string deviceName);
+    void setDeviceConnectedCallback_internal(DeviceConnectedCallback cb);
+    void setDeviceDisconnectedCallback_internal(DeviceDisconnectedCallback cb);
+    void addService_internal(BluetoothService::Ptr service);
+    void advertiseServices_internal();
+    void advertiseEddystoneUrl_internal(std::string url);
+
     void initServiceAdvertisingData(std::string deviceName);
     void initEddystoneAdvertisingData(std::string eddystoneUrl);
 
@@ -101,11 +104,17 @@ private:
     static void addAdvertisingDataInverted(std::vector<uint8_t>& target, uint8_t type, std::vector<uint8_t> data);
     static void addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_t type,  std::string url);
     static void addAdvertisingData(std::vector<uint8_t>& target, uint8_t type, std::vector<uint8_t> data);
-};
 
-void Bluetooth_onDeviceConnectedCallback(BLEStatus_t status, uint16_t handle);
-void Bluetooth_onDeviceDisconnectedCallback(uint16_t handle);
-uint16_t Bluetooth_onDataRead(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size);
-int Buetooth_onDataWrite(uint16_t value_handle, uint8_t *buffer, uint16_t size);
+    //
+    void onDeviceConnected(BLEStatus_t status, uint16_t handle);
+    void onDeviceDisconnected(uint16_t handle);
+    uint16_t onDataRead(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size);
+    int onDataWrite(uint16_t value_handle, uint8_t *buffer, uint16_t size);
+
+    static void onDeviceConnectedCallback(BLEStatus_t status, uint16_t handle);
+    static void onDeviceDisconnectedCallback(uint16_t handle);
+    static uint16_t onDataReadCallback(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size);
+    static int onDataWriteCallback(uint16_t value_handle, uint8_t *buffer, uint16_t size);
+};
 
 #endif
