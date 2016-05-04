@@ -4,6 +4,7 @@
 
 void BLENano::init() {
   Serial2.begin(115200);
+  Serial2.setTimeout(300);
   while(!Serial2) {
     ;
   }
@@ -31,8 +32,9 @@ bool BLENano::sendEddystoneUrl(String url) {
   Serial2.flush();
   //TODO: await echo and then result
   String awaitedResult = String("\\rnc=1/");
-  String result = Serial2.readString();
-  bool ok = result.equals(awaitedResult) >= 0;
-  return ok;
+  Serial.println(String("Sent: ") + commandString + String("awaiting ") + awaitedResult);
+  String result = Serial2.readStringUntil('\n');
+  Serial.println(String("Got: ") + result);
+  return result.startsWith(awaitedResult);
 }
 

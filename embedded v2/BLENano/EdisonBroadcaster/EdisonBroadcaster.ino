@@ -19,6 +19,7 @@ void setup() {
   while(!Serial) {
     delay(10);
   }
+  Serial.setTimeout(300);
   initBle();
   Serial.println("EdisonBroadcaster ready!");
 }
@@ -108,9 +109,10 @@ bool handleCommand(String command, String param) {
 
 void loop() {
   if(Serial.available() > 0) {
-     String input = Serial.readString();
-     if(input.startsWith("\\c") && input.endsWith("/")) {
-      String commandString = input.substring(2, input.length() - 1);
+     String input = Serial.readStringUntil('\n');
+     input.replace("\r", "");
+     if(input.startsWith("\\c")) {
+      String commandString = input.substring(2, input.length());
       int equalsIndex = commandString.indexOf("=");
       if(equalsIndex > 0 && equalsIndex < commandString.length()) {
         String command = commandString.substring(0, equalsIndex);
