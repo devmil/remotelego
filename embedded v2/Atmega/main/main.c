@@ -20,6 +20,10 @@
 #define MAIN_MOTOR_PRESCALER_BITS	(1<<CS10)
 #define MAIN_MOTOR_TIMER_TICKS		255
 
+#define FEAT_MOTOR_PRESCALER		1
+#define FEAT_MOTOR_PRESCALER_BITS	(1<<CS20)
+#define FEAT_MOTOR_TIMER_TICKS		255
+
 #define UART_BAUDRATE				115200
 
 #define RECEIVER_BUFF_SIZE 			128
@@ -27,11 +31,36 @@
 #define CONTROLLER_TIMEOUT_MS		1000
 
 //Commands
-const char* COMMAND_PING 			= "pp";
-const char* COMMAND_SERVO_PERCENT 	= "sp";
-const char* COMMAND_MOTOR_SPEED 	= "ms";
-const char* COMMAND_MOTOR_DIRECTION	= "md";
-const char* COMMAND_STATUS_COLOR	= "sc";
+const char* COMMAND_PING 						= "pp";
+
+const char* COMMAND_SERVO_PERCENT 				= "sp";
+
+const char* COMMAND_MOTOR_SPEED 				= "ms";
+const char* COMMAND_MOTOR_DIRECTION				= "md";
+
+const char* COMMAND_STATUS_COLOR				= "sc";
+
+const char* COMMAND_SET_FRONT_HEADLIGHT_LEFT	= "sfhl";
+const char* COMMAND_SET_FRONT_HEADLIGHT_RIGHT	= "sfhr";
+const char* COMMAND_SET_FRONT_HEADLIGHT			= "sfh";
+const char* COMMAND_SET_REAR_LIGHT_LEFT			= "srll";
+const char* COMMAND_SET_REAR_LIGHT_RIGHT		= "srlr";
+const char* COMMAND_SET_REAR_LIGHT				= "srl";
+const char* COMMAND_SET_FRONT_FOGLIGHT_LEFT		= "sffl";
+const char* COMMAND_SET_FRONT_FOGLIGHT_RIGHT	= "sffr";
+const char* COMMAND_SET_FRONT_FOGLIGHT			= "sff";
+const char* COMMAND_SET_REVERSING_LIGHT_LEFT	= "srell";
+const char* COMMAND_SET_REVERSING_LIGHT_RIGHT	= "srelr";
+const char* COMMAND_SET_REVERSING_LIGHT			= "srel";
+
+const char* COMMAND_FEAT1_MOTOR_SPEED 			= "fm1s";
+const char* COMMAND_FEAT1_MOTOR_DIRECTION		= "fm1d";
+const char* COMMAND_FEAT1_MOTOR_TIMEOUT_S		= "fm1ts";
+
+const char* COMMAND_FEAT2_MOTOR_SPEED 			= "fm2s";
+const char* COMMAND_FEAT2_MOTOR_DIRECTION		= "fm2d";
+const char* COMMAND_FEAT2_MOTOR_TIMEOUT_S		= "fm2ts";
+
 
 typedef struct {
 	double milliseconds;
@@ -56,7 +85,8 @@ typedef struct {
 	Pin pinDirection;
 	uint16_t timerMax;
 	uint8_t isInverted;
-	volatile uint16_t* timerCounterRegister;
+	volatile uint16_t* timerCounterRegister16;
+	volatile uint8_t* timerCounterRegister8;
 } Motor;
 
 typedef struct {
@@ -190,11 +220,13 @@ void Motor_init(
 	Motor* motor,
 	Pin pinDirection,
 	uint16_t timerMax,
-	volatile uint16_t* timerCounterRegister,
+	volatile uint16_t* timerCounterRegister16,
+	volatile uint8_t* timerCounterRegister8,
 	uint8_t isInverted) {
 		motor->pinDirection = pinDirection;
 		motor->timerMax = timerMax;
-		motor->timerCounterRegister = timerCounterRegister;
+		motor->timerCounterRegister16 = timerCounterRegister16;
+		motor->timerCounterRegister8 = timerCounterRegister8;
 		motor->isInverted = isInverted;
 		
 		Pin_setMode(&pinDirection, 1); //output
@@ -218,7 +250,11 @@ void Motor_setSpeedPercent(Motor* motor, float percent) {
 		percent = 100 - percent;
 	}
 	float value = (motor->timerMax * percent) / 100;
-	*motor->timerCounterRegister = (uint8_t)value;
+	if(motor->timerCounterRegister16 != 0) {
+		*motor->timerCounterRegister16 = (uint8_t)value;
+	} else if(motor->timerCounterRegister8 != 0) {
+		*motor->timerCounterRegister8 = (uint8_t)value;
+	}
 }
 
 void Servo_setPercent(float percent) {
@@ -247,7 +283,17 @@ void Servo_init() {
 
 Clock s_clock;
 Motor s_mainMotor;
+Motor s_featureMotor1;
+Motor s_featureMotor2;
 RgbLed s_stateLed;
+Pin s_ledFrontHeadlightLeft;
+Pin s_ledFrontHeadlightRight;
+Pin s_ledRearLightLeft;
+Pin s_ledRearLightRight;
+Pin s_ledFrontFoglightLeft;
+Pin s_ledFrontFoglightRight;
+Pin s_ledReversingLightLeft;
+Pin s_ledReversingLightRight;
 
 volatile float s_millisecondsSinceLastControl = 0;
 uint8_t s_controllerTimeoutReached = 0;
@@ -278,19 +324,41 @@ ISR( TIMER0_OVF_vect )
 }
 
 void initMotorTimer() {
-	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM 
-	TCCR1A |= (1 << WGM10); //Timer1A: Fast PWM mode bit 1
-	TCCR1B |= (1 << WGM12); //Timer1A: Fast PWM mode bit 2
+	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM
+	TCCR1A |= (1 << COM1B0) | (1 << COM1B1); //Timer1B: inverting PWM 
+	TCCR1A |= (1 << WGM10); //Timer1: Fast PWM mode bit 1
+	TCCR1B |= (1 << WGM12); //Timer1: Fast PWM mode bit 2
 	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; //Prescaler = 1
 	
 	DDRD |= (1<<PD5); 						// PD5=OC1A is output
+	DDRD |= (1<<PD4); 						// PD4=OC1B is output
+	
+	TCCR2 |= (1 << COM20) | (1 << COM21); //Timer1A: inverting PWM
+	TCCR2 |= (1 << WGM20); //Timer1: Fast PWM mode bit 1
+	TCCR2 |= FEAT_MOTOR_PRESCALER_BITS; //Prescaler = 1
+
+	DDRD |= (1<<PD7); 						// PD7=OC2 is output	
 }
 
 void initMainMotor() {
 	Pin pinDirection;
 	Pin_init(&pinDirection, &DDRD, &PORTD, PD6);
 
-	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 1);
+	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 0, 1);
+}
+
+void initFeatureMotor1() {
+	Pin pinDirection;
+	Pin_init(&pinDirection, &DDRD, &PORTD, PD3);
+
+	Motor_init(&s_featureMotor1, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1);
+}
+
+void initFeatureMotor2() {
+	Pin pinDirection;
+	Pin_init(&pinDirection, &DDRC, &PORTC, PC0);
+
+	Motor_init(&s_featureMotor2, pinDirection, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1);
 }
 
 void initStatusLed() {
@@ -303,8 +371,28 @@ void initStatusLed() {
 	RgbLed_init(&s_stateLed, pinRed, pinGreen, pinBlue);
 }
 
+void initLEDs() {
+	Pin_init(&s_ledFrontHeadlightLeft, &DDRA, &PORTA, PA3);
+	Pin_setMode(&s_ledFrontHeadlightLeft, 1);
+	Pin_init(&s_ledFrontHeadlightRight, &DDRA, &PORTA, PA4);
+	Pin_setMode(&s_ledFrontHeadlightRight, 1);
+	Pin_init(&s_ledRearLightLeft, &DDRA, &PORTA, PA5);
+	Pin_setMode(&s_ledRearLightLeft, 1);
+	Pin_init(&s_ledRearLightRight, &DDRA, &PORTA, PA6);
+	Pin_setMode(&s_ledRearLightRight, 1);
+	
+	Pin_init(&s_ledFrontFoglightLeft, &DDRC, &PORTC, PC7);
+	Pin_setMode(&s_ledFrontFoglightLeft, 1);
+	Pin_init(&s_ledFrontFoglightRight, &DDRC, &PORTC, PC6);
+	Pin_setMode(&s_ledFrontFoglightRight, 1);
+	Pin_init(&s_ledReversingLightLeft, &DDRB, &PORTB, PB0);
+	Pin_setMode(&s_ledReversingLightLeft, 1);
+	Pin_init(&s_ledReversingLightRight, &DDRB, &PORTB, PB1);
+	Pin_setMode(&s_ledReversingLightRight, 1);
+}
+
 void nextTestStep() {
-	PORTD ^= (1<<PD7); 					// toggle PD7	
+	PORTC ^= (1<<PC1); 					// toggle PC1		
 }
 
 char s_uartRcvBuffer[RECEIVER_BUFF_SIZE + 1];
@@ -332,6 +420,78 @@ uint8_t handleCommand(char* command, char* value) {
 		uint32_t color = strtoul(value, (char**)0, 0);
 		RgbLed_setColor(&s_stateLed, color);
 		result = 1;
+	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_LEFT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontHeadlightLeft, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_RIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontHeadlightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontHeadlightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&s_ledFrontHeadlightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_LEFT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledRearLightLeft, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_RIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledRearLightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledRearLightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&s_ledRearLightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_LEFT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontFoglightLeft, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_RIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontFoglightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledFrontFoglightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&s_ledFrontFoglightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_LEFT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledReversingLightLeft, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_RIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledReversingLightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT) == 0) {
+		int on = atoi(value) != 0;
+		Pin_setValue(&s_ledReversingLightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&s_ledReversingLightRight, on == 0 ? 0 : 1);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_SPEED) == 0) {
+		double doubleVal = atof(value);
+		Motor_setSpeedPercent(&s_featureMotor1, (float)doubleVal);
+		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_DIRECTION) == 0) {
+		int intVal = atoi(value);
+		Motor_setDirection(&s_featureMotor1, intVal != 0 ? 1 : 0);
+		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_TIMEOUT_S) == 0) {
+		//TODO: handle timeout for feature motor 1
+	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_SPEED) == 0) {
+		double doubleVal = atof(value);
+		Motor_setSpeedPercent(&s_featureMotor2, (float)doubleVal);
+		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_DIRECTION) == 0) {
+		int intVal = atoi(value);
+		Motor_setDirection(&s_featureMotor2, intVal != 0 ? 1 : 0);
+		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_TIMEOUT_S) == 0) {
+		//TODO: handle timeout for feature motor 1
 	}
 	return result;
 }
@@ -433,6 +593,7 @@ void handleUart() {
 			if(handlePotentialCommand(c)) {
 				resetControllerTimeout();
 			}
+			uart_putc(c);
 		}
 	} while(resultErrorCode == 0);
 }
@@ -454,10 +615,10 @@ int main(void)
 	
 	MCUCSR = 0;
 	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
-	DDRD |= (1<<PD7); 						// PD7 is output
-	DDRC |= (1<<PC0); 						// PD6 is output
+	DDRC |= (1<<PC1); 						// PC1 is output
+	DDRC |= (1<<PC2); 						// PC2 is output
 	
-	PORTC |= (1 << PC0);
+	PORTC |= (1 << PC2);
 	
 	Clock_init(&s_clock, SERVO_TIMER_PERIOD_MS);
 	
@@ -465,7 +626,10 @@ int main(void)
 	
 	initMotorTimer();
 	initMainMotor();
+	initFeatureMotor1();
+	initFeatureMotor2();
 	initStatusLed();
+	initLEDs();
 	
 	RgbLed_setColor(&s_stateLed, 0xFF0000); //Red
 	
