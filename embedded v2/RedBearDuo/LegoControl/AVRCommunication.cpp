@@ -48,14 +48,14 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
   }
   commandString += String("/");
 
-  String awaitedResult = String("\\rnc=") + String(commands.size(), DEC);
+  String awaitedResult = "\\rnc=" + String(commands.size(), DEC) + "/";
 
   bool ok = false;
   uint8_t tries = 0;
   while(!ok) {
     tries++;
     if(tries >= 4) {
-      Serial1.print("\r\n\r\n3 tries failed :(\r\n\r\n");
+      Serial.print("\r\n\r\n3 tries failed :(\r\n\r\n");
       s_failCount++;
       if(s_failCount >= 2) {
 //        digitalWrite(avrReset, LOW);
@@ -70,11 +70,12 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
       std::vector<char> buff(availableBytes);
       Serial1.readBytes(&buff[0], availableBytes);
     }
-    Serial1.print(commandString);
+    Serial1.println(commandString);
     Serial1.flush();
-    //TODO: await echo and then result
-    String result = Serial1.readStringUntil('/');
-    ok = result.indexOf(awaitedResult) >= 0;
+    String echo = Serial1.readStringUntil('\n');
+    String result = Serial1.readStringUntil('\n');
+    result.replace("\r", "");
+    ok = result.equals(awaitedResult);
     if(!ok) {
       delay(20);
     }

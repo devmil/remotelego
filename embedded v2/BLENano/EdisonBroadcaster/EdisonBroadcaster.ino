@@ -110,6 +110,8 @@ bool handleCommand(String command, String param) {
 void loop() {
   if(Serial.available() > 0) {
      String input = Serial.readStringUntil('\n');
+     //echo
+     Serial.print(input + "\n");
      input.replace("\r", "");
      if(input.startsWith("\\c")) {
       String commandString = input.substring(2, input.length());

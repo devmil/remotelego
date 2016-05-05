@@ -33,8 +33,13 @@ bool BLENano::sendEddystoneUrl(String url) {
   //TODO: await echo and then result
   String awaitedResult = String("\\rnc=1/");
   Serial.println(String("Sent: ") + commandString + String("awaiting ") + awaitedResult);
+  String echo = Serial2.readStringUntil('\n');
   String result = Serial2.readStringUntil('\n');
-  Serial.println(String("Got: ") + result);
-  return result.startsWith(awaitedResult);
+  result.replace("\r", "");
+  bool ok = result.startsWith(awaitedResult);
+  if(!ok) {
+    Serial.println("Result not OK. Echo was " + echo + "Result was " + result);
+  }
+  return ok;
 }
 

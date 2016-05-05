@@ -528,7 +528,7 @@ uint8_t handleCommands() {
 	if(handleCommand(commandBuff, valBuff)) {
 		numOfCommands++;
 	}
-	uart_puts("\\r");
+	uart_puts("\r\n\\r");
 	uart_puts("nc=");
 	char buff[12];
 	itoa(numOfCommands, buff, 10);
@@ -590,10 +590,10 @@ void handleUart() {
 		resultErrorCode = (uint8_t)(getResult >> 8);
 		
 		if (resultErrorCode == 0) {
+			uart_putc(c);
 			if(handlePotentialCommand(c)) {
 				resetControllerTimeout();
 			}
-			uart_putc(c);
 		}
 	} while(resultErrorCode == 0);
 }
