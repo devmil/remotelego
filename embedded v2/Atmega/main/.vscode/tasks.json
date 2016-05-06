@@ -31,6 +31,9 @@
 {
     "version": "0.1.0",
     "command": "make",
+	"args": [
+		"rebuild"
+	],
     "isShellCommand": true,
     "tasks": [
         {

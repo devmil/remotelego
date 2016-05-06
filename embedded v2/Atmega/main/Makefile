@@ -13,6 +13,10 @@ CFLAGS += $(COMMON) -I$(AVRLIB) -I. -std=gnu99 -Wall -Wextra -DF_CPU=$(CPU_FREQU
 LDFLAGS += $(COMMON) -Wl,--gc-sections
 
 
+.PHONY: rebuild
+rebuild: clean all
+
+.PHONY: all
 all: $(BUILDDIR)/$(PROJECT).hex
 
 $(BUILDDIR):

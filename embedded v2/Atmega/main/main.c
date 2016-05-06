@@ -60,10 +60,12 @@ const char* COMMAND_SET_REVERSING_LIGHT			= "srel";
 const char* COMMAND_FEAT1_MOTOR_SPEED 			= "fm1s";
 const char* COMMAND_FEAT1_MOTOR_DIRECTION		= "fm1d";
 const char* COMMAND_FEAT1_MOTOR_TIMEOUT_S		= "fm1ts";
+const char* COMMAND_FEAT1_MOTOR_TIMEOUT_MS		= "fm1tms";
 
 const char* COMMAND_FEAT2_MOTOR_SPEED 			= "fm2s";
 const char* COMMAND_FEAT2_MOTOR_DIRECTION		= "fm2d";
 const char* COMMAND_FEAT2_MOTOR_TIMEOUT_S		= "fm2ts";
+const char* COMMAND_FEAT2_MOTOR_TIMEOUT_MS		= "fm2tms";
 
 
 void Servo_setPercent(float percent) {
@@ -295,6 +297,10 @@ uint8_t handleCommand(char* command, char* value) {
 		int intVal = atoi(value);
 		TimeoutMotor_setRemaining(&s_featureMotor1, intVal * 1000);
 		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_TIMEOUT_MS) == 0) {
+		int intVal = atoi(value);
+		TimeoutMotor_setRemaining(&s_featureMotor1, intVal);
+		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
 		TimeoutMotor_setSpeedPercent(&s_featureMotor2, (float)doubleVal);
@@ -306,6 +312,10 @@ uint8_t handleCommand(char* command, char* value) {
 	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_TIMEOUT_S) == 0) {
 		int intVal = atoi(value);
 		TimeoutMotor_setRemaining(&s_featureMotor2, intVal * 1000);
+		result = 1;
+	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_TIMEOUT_MS) == 0) {
+		int intVal = atoi(value);
+		TimeoutMotor_setRemaining(&s_featureMotor2, intVal);
 		result = 1;
 	}
 	return result;
