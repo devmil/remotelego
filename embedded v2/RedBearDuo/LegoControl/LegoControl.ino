@@ -7,10 +7,15 @@ SYSTEM_MODE(AUTOMATIC);//connect to cloud
 #include "AVRCommunication.h"
 #include "BLECommunication.h"
 #include "NANOCommunication.h"
+#include "LegoCarModel.hpp"
 
 int led = D7; 
 
 uint16_t DELAY_MS = 500;
+
+uint8_t s_state = 0;
+uint8_t s_advertisingState = 1;
+LegoCarModel s_carModel;
 
 void setup() {
   pinMode(led, OUTPUT);
@@ -18,13 +23,11 @@ void setup() {
 
   AVRProtocol::init();
 
-  BLE_configure();
+  BLE_configure(s_carModel);
 
   BLENano::init();
 }
 
-uint8_t s_state = 0;
-uint8_t s_advertisingState = 1;
 
 void loop() {
   AVRProtocol::ping(); //this currently pings the AVR every 500ms as we have a 500ms loop delay
@@ -50,27 +53,6 @@ void loop() {
   }
 
   delay(DELAY_MS);
-
-
-  
-/*  AVR_sendCommands("\\csp=100|ms=40|md=1/", 3);
-  
-  delay(DELAY_MS);
-
-  digitalWrite(led, LOW);
-  AVR_sendCommands("\\csp=80|ms=30|md=0/", 3);
-  
-  delay(DELAY_MS);
-
-  AVR_sendCommands("\\csp=0|ms=100|md=0/", 3);
-
-  delay(DELAY_MS);
-
-  AVR_sendCommands("\\csp=20|ms=80|md=0/", 3);
-
-  delay(DELAY_MS);
-
-  AVR_sendCommands("\\csp=50|ms=0|md=0/", 3); */
 }
 
 

@@ -18,19 +18,55 @@ AVRCommandData AVRCommandFactory::createStatusColorCommand(uint32_t color) {
   return AVRCommandData("sc", String("0x") + String(color, HEX));  
 }
 
+AVRCommandData AVRCommandFactory::createFrontHeadlightCommand(Position pos, bool on) {
+  return AVRCommandData("sfh" + getPositionIdentifier(pos), on ? "1" : "0");
+}
+
+AVRCommandData AVRCommandFactory::createRearLightCommand(Position pos, bool on) {
+  return AVRCommandData("srl" + getPositionIdentifier(pos), on ? "1" : "0");
+}
+
+AVRCommandData AVRCommandFactory::createFrontFoglightCommand(Position pos, bool on) {
+  return AVRCommandData("sff" + getPositionIdentifier(pos), on ? "1" : "0");
+}
+
+AVRCommandData AVRCommandFactory::createReversingLightCommand(Position pos, bool on) {
+  return AVRCommandData("srel" + getPositionIdentifier(pos), on ? "1" : "0");
+}
+
+AVRCommandData AVRCommandFactory::createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent) {
+  return AVRCommandData("fm" + String(featureNumber, DEC) + "s", String(speedPercent, DEC));
+}
+
+AVRCommandData AVRCommandFactory::createFeatureMotorDirectionCommand(uint8_t featureNumber, uint8_t direction) {
+  return AVRCommandData("fm" + String(featureNumber, DEC) + "d", String(direction, DEC));
+}
+
+AVRCommandData AVRCommandFactory::createFeatureMotorTimeoutCommand(uint8_t featureNumber, uint8_t timeoutSeconds) {
+  return AVRCommandData("fm" + String(featureNumber, DEC) + "ts", String(timeoutSeconds, DEC));
+}
+
+String AVRCommandFactory::getPositionIdentifier(Position pos) {
+  switch(pos) {
+    case Position::Left:
+      return "l";
+    case Position::Right:
+      return "r";
+    case Position::Both:
+      return "";
+    default:
+      return "";
+  }
+  return "";
+}
+
+
 void AVRProtocol::init() {
   Serial1.begin(115200);
   while (!Serial1) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
   Serial1.setTimeout(100);  
-}
-
-void AVRProtocol::stopAll() {
-  std::vector<AVRCommandData> commands;
-  commands.push_back(AVRCommandFactory::createMotorSpeedCommand(0));
-  commands.push_back(AVRCommandFactory::createServoAngleCommand(0));
-  send(commands);
 }
 
 void AVRProtocol::send(std::vector<AVRCommandData> commands) {
@@ -47,6 +83,8 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
     first = false;
   }
   commandString += String("/");
+
+  Serial.println("Sending AVR command: " + commandString);
 
   String awaitedResult = "\\rnc=" + String(commands.size(), DEC) + "/";
 

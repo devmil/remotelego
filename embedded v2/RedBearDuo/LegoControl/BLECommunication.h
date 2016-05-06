@@ -3,7 +3,7 @@
 
 #include "Bluetooth.hpp"
 
-#include "AVRCommunication.h"
+#include "LegoCarModel.hpp"
 
 //BLE configuration data
 #define BLE_DEVICE_NAME                         "Lego RC"
@@ -11,18 +11,21 @@
 
 class SpeedCharacteristic : public BluetoothCharacteristic {
 public:
-    SpeedCharacteristic() 
-    : BluetoothCharacteristic(std::string("8d8ba32b-96be-4590-910b-c756c5222c9f")) {
+    SpeedCharacteristic(LegoCarModel& model) 
+    : BluetoothCharacteristic(std::string("8d8ba32b-96be-4590-910b-c756c5222c9f")),
+      m_model(model){
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
     }
 protected:
     virtual std::vector<uint8_t> onRead() {
-      //NOOP
+      std::vector<uint8_t> result;
+      result.push_back(m_model.getMotorSpeedPercent());
+      return result;
     }
     virtual void onWrite(std::vector<uint8_t> data) {
       if(data.size() != 1) {
@@ -30,28 +33,29 @@ protected:
         return;
       }
       int8_t percent = data[0];
-      AVRProtocol::send(
-        { 
-          AVRCommandFactory::createMotorSpeedCommand(abs(percent)),
-          AVRCommandFactory::createMotorDirectionCommand(percent > 0) 
-        });
+      m_model.setMotorSpeedPercent(percent);
     }
+private:
+  LegoCarModel& m_model;
 };
 
 class SteerCharacteristic : public BluetoothCharacteristic {
 public:
-    SteerCharacteristic() 
-    : BluetoothCharacteristic(std::string("7baf8dca-2bfc-47fb-af29-042fccc180eb")) {
+    SteerCharacteristic(LegoCarModel& model) 
+    : BluetoothCharacteristic(std::string("7baf8dca-2bfc-47fb-af29-042fccc180eb")),
+      m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
     }
 protected:
     virtual std::vector<uint8_t> onRead() {
-      //NOOP
+      std::vector<uint8_t> result;
+      result.push_back(m_model.getSteeringDegrees());
+      return result;
     }
     virtual void onWrite(std::vector<uint8_t> data) {
       if(data.size() != 1) {
@@ -59,19 +63,21 @@ protected:
         return;
       }
       int8_t angle = data[0]; //range = -90 - 90
-      AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(angle));
+      m_model.setSteeringDegrees(angle);
     }
+private:
+  LegoCarModel& m_model;
 };
 
 class LegoCarService : public BluetoothService {
 public:
-  LegoCarService() 
+  LegoCarService(LegoCarModel& model) 
   : BluetoothService(std::string("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
-    addCharacteristic(std::make_shared<SpeedCharacteristic>());
-    addCharacteristic(std::make_shared<SteerCharacteristic>());
+    addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
+    addCharacteristic(std::make_shared<SteerCharacteristic>(model));
   }
 };
 
-void BLE_configure();
+void BLE_configure(LegoCarModel& model);
 
 #endif
