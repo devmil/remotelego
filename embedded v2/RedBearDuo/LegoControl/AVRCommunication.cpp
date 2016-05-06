@@ -84,7 +84,7 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
   }
   commandString += String("/");
 
-  Serial.println("Sending AVR command: " + commandString);
+  //Serial.println("Sending AVR command: " + commandString);
 
   String awaitedResult = "\\rnc=" + String(commands.size(), DEC) + "/";
 

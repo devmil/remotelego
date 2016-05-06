@@ -28,11 +28,11 @@ bool BLENano::sendEddystoneUrl(String url) {
     Serial2.readBytes(&buff[0], availableBytes);
   }
   String commandString = String("\\cec=") + url + String("/");
-  Serial2.print(commandString);
+  Serial2.println(commandString);
   Serial2.flush();
-  //TODO: await echo and then result
+
   String awaitedResult = String("\\rnc=1/");
-  Serial.println(String("Sent: ") + commandString + String("awaiting ") + awaitedResult);
+  //Serial.println(String("Sent: ") + commandString + String("awaiting ") + awaitedResult);
   String echo = Serial2.readStringUntil('\n');
   String result = Serial2.readStringUntil('\n');
   result.replace("\r", "");
