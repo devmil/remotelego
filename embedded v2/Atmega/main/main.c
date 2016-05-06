@@ -92,8 +92,8 @@ void Servo_init() {
 
 Clock s_clock;
 Motor s_mainMotor;
-Motor s_featureMotor1;
-Motor s_featureMotor2;
+TimeoutMotor s_featureMotor1;
+TimeoutMotor s_featureMotor2;
 RgbLed s_stateLed;
 Pin s_ledFrontHeadlightLeft;
 Pin s_ledFrontHeadlightRight;
@@ -130,6 +130,8 @@ ISR( TIMER0_OVF_vect )
 {
 	Clock_tick(&s_clock);
 	increaseControllerTimeout(s_clock.tickDurationMs);
+	TimeoutMotor_tick(&s_featureMotor1);
+	TimeoutMotor_tick(&s_featureMotor2);
 }
 
 void initMotorTimer() {
@@ -160,14 +162,14 @@ void initFeatureMotor1() {
 	Pin pinDirection;
 	Pin_init(&pinDirection, &DDRD, &PORTD, PD3);
 
-	Motor_init(&s_featureMotor1, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1);
+	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1);
 }
 
 void initFeatureMotor2() {
 	Pin pinDirection;
 	Pin_init(&pinDirection, &DDRC, &PORTC, PC0);
 
-	Motor_init(&s_featureMotor2, pinDirection, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1);
+	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, pinDirection, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1);
 }
 
 void initStatusLed() {
@@ -283,24 +285,28 @@ uint8_t handleCommand(char* command, char* value) {
 		result = 1; 
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
-		Motor_setSpeedPercent(&s_featureMotor1, (float)doubleVal);
+		TimeoutMotor_setSpeedPercent(&s_featureMotor1, (float)doubleVal);
 		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_DIRECTION) == 0) {
 		int intVal = atoi(value);
-		Motor_setDirection(&s_featureMotor1, intVal != 0 ? 1 : 0);
+		TimeoutMotor_setDirection(&s_featureMotor1, intVal != 0 ? 1 : 0);
 		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_TIMEOUT_S) == 0) {
-		//TODO: handle timeout for feature motor 1
+		int intVal = atoi(value);
+		TimeoutMotor_setRemaining(&s_featureMotor1, intVal * 1000);
+		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
-		Motor_setSpeedPercent(&s_featureMotor2, (float)doubleVal);
+		TimeoutMotor_setSpeedPercent(&s_featureMotor2, (float)doubleVal);
 		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_DIRECTION) == 0) {
 		int intVal = atoi(value);
-		Motor_setDirection(&s_featureMotor2, intVal != 0 ? 1 : 0);
+		TimeoutMotor_setDirection(&s_featureMotor2, intVal != 0 ? 1 : 0);
 		result = 1;
 	} else if(strcmp(command, COMMAND_FEAT2_MOTOR_TIMEOUT_S) == 0) {
-		//TODO: handle timeout for feature motor 1
+		int intVal = atoi(value);
+		TimeoutMotor_setRemaining(&s_featureMotor2, intVal * 1000);
+		result = 1;
 	}
 	return result;
 }
