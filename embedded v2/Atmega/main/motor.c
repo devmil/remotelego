@@ -15,12 +15,15 @@ void Motor_init(
 		
 		Pin_setMode(&pinDirection, 1); //output
 		Pin_setValue(&pinDirection, 0);
-		
+
+		Motor_setDirection(motor, 1);		
 		Motor_setSpeedPercent(motor, 0);
 } 
 
 void Motor_setDirection(Motor* motor, uint8_t direction) {
+	motor->direction = direction;
 	Pin_setValue(&motor->pinDirection, direction);
+	Motor_adaptSignal(motor);
 }
 
 void Motor_setSpeedPercent(Motor* motor, float percent) {
@@ -30,6 +33,17 @@ void Motor_setSpeedPercent(Motor* motor, float percent) {
 	if(percent < 0) {
 		percent = 0;
 	}
+	motor->speedPercent = percent;
+	Motor_adaptSignal(motor);
+}
+
+void Motor_adaptSignal(Motor* motor) {
+	float percent = motor->speedPercent;
+
+	if(motor->direction == 1) {
+		//reverse signal as we are having a 1 as reference
+		percent = 100 - percent;
+	}
 	if(motor->isInverted) {
 		percent = 100 - percent;
 	}
@@ -38,7 +52,7 @@ void Motor_setSpeedPercent(Motor* motor, float percent) {
 		*motor->timerCounterRegister16 = (uint8_t)value;
 	} else if(motor->timerCounterRegister8 != 0) {
 		*motor->timerCounterRegister8 = (uint8_t)value;
-	}
+	}	
 }
 
 void TimeoutMotor_init(

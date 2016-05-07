@@ -9,6 +9,8 @@ typedef struct {
 	uint8_t isInverted;
 	volatile uint16_t* timerCounterRegister16;
 	volatile uint8_t* timerCounterRegister8;
+	uint8_t direction;
+	float speedPercent;
 } Motor;
 
 void Motor_init(
@@ -22,6 +24,8 @@ void Motor_init(
 void Motor_setDirection(Motor* motor, uint8_t direction);
 
 void Motor_setSpeedPercent(Motor* motor, float percent);
+
+void Motor_adaptSignal(Motor* motor);
 
 typedef struct {
     Motor motor;
