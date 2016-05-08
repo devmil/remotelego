@@ -7,6 +7,9 @@ void Pin_init(Pin* pin, volatile uint8_t* definitionRegister, volatile uint8_t* 
 }
 
 void Pin_setMode(Pin* pin, uint8_t mode) {
+	if(pin->definitionRegister == 0) {
+		return;
+	}
 	if(mode != 0) {
 		*pin->definitionRegister |= (1 << pin->offset);
 	} else {
@@ -15,6 +18,9 @@ void Pin_setMode(Pin* pin, uint8_t mode) {
 }
 
 void Pin_setValue(Pin* pin, uint8_t value) {
+	if(pin->definitionRegister == 0) {
+		return;
+	}
 	if(value != 0) {
 		*pin->portRegister |= (1 << pin->offset);
 	} else {

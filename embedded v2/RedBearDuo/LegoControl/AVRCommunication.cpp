@@ -92,16 +92,6 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
   uint8_t tries = 0;
   while(!ok) {
     tries++;
-    if(tries >= 4) {
-      Serial.print("\r\n\r\n3 tries failed :(\r\n\r\n");
-      s_failCount++;
-      if(s_failCount >= 2) {
-//        digitalWrite(avrReset, LOW);
-        delay(100);
-//        digitalWrite(avrReset, HIGH);
-      }
-      return;
-    }
     //clear serial receive buffer
     int availableBytes = Serial1.available();
     if(availableBytes > 0) {
@@ -116,6 +106,16 @@ void AVRProtocol::send(std::vector<AVRCommandData> commands) {
     ok = result.equals(awaitedResult);
     if(!ok) {
       delay(20);
+      if(tries >= 4) {
+        Serial.print("\r\n\r\n3 tries failed :(\r\n\r\nAwaited: " + awaitedResult + "\r\nCommand: " + commandString + "\r\nEcho: " + echo + "\r\nResult: " + result);
+        s_failCount++;
+        if(s_failCount >= 2) {
+  //        digitalWrite(avrReset, LOW);
+          delay(100);
+  //        digitalWrite(avrReset, HIGH);
+        }
+        return;
+      }
     }
   }
   s_failCount = 0;

@@ -20,12 +20,12 @@
 #define SERVO_MIN_MS				0.8f
 #define SERVO_MAX_MS				2.3f
 
-#define MAIN_MOTOR_PRESCALER		1
-#define MAIN_MOTOR_PRESCALER_BITS	(1<<CS10)
+#define MAIN_MOTOR_PRESCALER		64
+#define MAIN_MOTOR_PRESCALER_BITS	(1<<CS11) | (1<<CS10)
 #define MAIN_MOTOR_TIMER_TICKS		255
 
-#define FEAT_MOTOR_PRESCALER		1
-#define FEAT_MOTOR_PRESCALER_BITS	(1<<CS20)
+#define FEAT_MOTOR_PRESCALER		64
+#define FEAT_MOTOR_PRESCALER_BITS	(1<<CS21) | (1<<CS10)
 #define FEAT_MOTOR_TIMER_TICKS		255
 
 #define UART_BAUDRATE				115200
@@ -205,7 +205,7 @@ void initLEDs() {
 }
 
 void nextTestStep() {
-	PORTC ^= (1<<PC1); 					// toggle PC1		
+	PORTB ^= (1<<PB2); 					// toggle PB2		
 }
 
 char s_uartRcvBuffer[RECEIVER_BUFF_SIZE + 1];
@@ -440,7 +440,7 @@ int main(void)
 	
 	MCUCSR = 0;
 	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
-	DDRC |= (1<<PC1); 						// PC1 is output
+	DDRB |= (1<<PB2); 						// PC1 is output
 	DDRC |= (1<<PC2); 						// PC2 is output
 	
 	PORTC |= (1 << PC2);
