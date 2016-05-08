@@ -139,16 +139,15 @@ ISR( TIMER0_OVF_vect )
 void initMotorTimer() {
 	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM
 	TCCR1A |= (1 << COM1B0) | (1 << COM1B1); //Timer1B: inverting PWM 
-	TCCR1A |= (1 << WGM10); //Timer1: Fast PWM mode bit 1
-	TCCR1B |= (1 << WGM12); //Timer1: Fast PWM mode bit 2
-	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; //Prescaler = 1
+	TCCR1A |= (1 << WGM10); //Timer1: Phase correct PWM
+	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; 
 	
 	DDRD |= (1<<PD5); 						// PD5=OC1A is output
 	DDRD |= (1<<PD4); 						// PD4=OC1B is output
 	
 	TCCR2 |= (1 << COM20) | (1 << COM21); //Timer1A: inverting PWM
-	TCCR2 |= (1 << WGM20); //Timer1: Fast PWM mode bit 1
-	TCCR2 |= FEAT_MOTOR_PRESCALER_BITS; //Prescaler = 1
+	TCCR2 |= (1 << WGM20); //Timer2: Phase correct PWM
+	TCCR2 |= FEAT_MOTOR_PRESCALER_BITS; 
 
 	DDRD |= (1<<PD7); 						// PD7=OC2 is output	
 }
