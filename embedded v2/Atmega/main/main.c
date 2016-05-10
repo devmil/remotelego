@@ -11,6 +11,39 @@
 #include "led.h"
 #include "motor.h"
 
+//For B0: BIT(B,0)
+#define BIT(p,b)                (P##p##b)
+#define PORT(p,b)               (PORT##p)
+#define PIN(p,b)                (PIN##p)
+#define DDR(p,b)                (DDR##p)
+
+#define INIT_PIN(port, bit) { .definitionRegister = &DDR(port, bit), .portRegister = &PORT(port, bit), .offset = BIT(port, bit) }
+#define D_PIN(name, port, bit) Pin PIN_##name = INIT_PIN(port, bit);
+
+
+                              /*  ----------------------------  */
+D_PIN(LED_REVERSE_L,   B, 0)  /* -|           \____/         |- */ D_PIN(LED_STATE_R,     A, 0)
+D_PIN(LED_REVERSE_R,   B, 1)  /* -|                          |- */ D_PIN(LED_STATE_G,     A, 1)
+D_PIN(LED_DEBUG,       B, 2)  /* -|                          |- */ D_PIN(LED_STATE_B,     A, 2)
+D_PIN(SERVO_SIGNAL,    B, 3)  /* -|                          |- */ D_PIN(LED_FRONT_H_L,   A, 3)
+/*        SS              */  /* -|                          |- */ D_PIN(LED_FRONT_H_R,   A, 4)
+/*        MOSI            */  /* -|                          |- */ D_PIN(LED_REAR_L,      A, 5)
+/*        MISO            */  /* -|                          |- */ D_PIN(LED_REAR_R,      A, 6)
+/*        SCK             */  /* -|                          |- */ /*  A7                    */
+/*        RESET           */  /* -|                          |- */ /*        AREF            */
+/*        VCC             */  /* -|                          |- */ /*        GND             */
+/*        GND             */  /* -|                          |- */ /*        AVCC            */
+/*        XTAL2           */  /* -|                          |- */ D_PIN(LED_FRONT_F_L,   C, 7)
+/*        XTAL1           */  /* -|                          |- */ D_PIN(LED_FRONT_F_R,   C, 6)
+/*        RXD             */  /* -|                          |- */ /*  C5                    */
+/*        TXD             */  /* -|                          |- */ /*  C4                    */
+/*                D2      */  /* -|                          |- */ /*  C3                    */
+D_PIN(FEATURE1_DIR1,   D, 3)  /* -|                          |- */ D_PIN(LED_DEBUG2,      C, 2)
+D_PIN(FEATURE1_PWM,    D, 4)  /* -|                          |- */ /*  C1                    */
+D_PIN(MAIN_PWM,        D, 5)  /* -|                          |- */ D_PIN(FEATURE2_DIR1,   C, 0)
+D_PIN(MAIN_DIR1,       D, 6)  /* -|                          |- */ D_PIN(FEATURE2_PWM,    D, 7)
+                              /*  ----------------------------  */
+
 #define SERVO_PRESCALER 			1024
 #define SERVO_PRESCALER_BITS		(1<<CS00) | (1<<CS02)
 #define SERVO_TIMER_TICKS			255
@@ -81,8 +114,8 @@ void Servo_setPercent(float percent) {
 }
 
 void Servo_init() {
-	DDRB |= (1<<PB3); 						// PB3 == OC0 is servo output
-	PORTB |= (1<<PB3);						// pull down
+	Pin_setMode(&PIN_SERVO_SIGNAL, 1); 		// PB3 == OC0 is servo output
+	Pin_setValue(&PIN_SERVO_SIGNAL, 0); 	//pull down
 
 	TCCR0 |= (1<<WGM00) | (1<<WGM01);		// fast PWM mode
 	TCCR0 |= (1<<COM01);					// compare output mode
@@ -105,6 +138,8 @@ Pin s_ledFrontFoglightLeft;
 Pin s_ledFrontFoglightRight;
 Pin s_ledReversingLightLeft;
 Pin s_ledReversingLightRight;
+
+Pin s_pinDebug;
 
 volatile float s_millisecondsSinceLastControl = 0;
 uint8_t s_controllerTimeoutReached = 0;
@@ -139,72 +174,70 @@ ISR( TIMER0_OVF_vect )
 void initMotorTimer() {
 	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM
 	TCCR1A |= (1 << COM1B0) | (1 << COM1B1); //Timer1B: inverting PWM 
-	TCCR1A |= (1 << WGM10); //Timer1: Phase correct PWM
+	TCCR1A |= (1 << WGM10); 				//Timer1: Phase correct PWM
 	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; 
 	
-	DDRD |= (1<<PD5); 						// PD5=OC1A is output
-	DDRD |= (1<<PD4); 						// PD4=OC1B is output
+	Pin_setMode(&PIN_MAIN_PWM, 1);				// PD5=OC1A is output
+	Pin_setMode(&PIN_FEATURE1_PWM, 1); 		// PD4=OC1B is output
 	
-	TCCR2 |= (1 << COM20) | (1 << COM21); //Timer1A: inverting PWM
-	TCCR2 |= (1 << WGM20); //Timer2: Phase correct PWM
+	TCCR2 |= (1 << COM20) | (1 << COM21); 	//Timer1A: inverting PWM
+	TCCR2 |= (1 << WGM20); 					//Timer2: Phase correct PWM
 	TCCR2 |= FEAT_MOTOR_PRESCALER_BITS; 
 
-	DDRD |= (1<<PD7); 						// PD7=OC2 is output	
+	Pin_setMode(&PIN_FEATURE2_PWM, 1);			// PD7=OC2 is output
 }
 
 void initMainMotor() {
-	Pin pinDirection;
-	Pin_init(&pinDirection, &DDRD, &PORTD, PD6);
+	Pin pinDirection1, pinDirection2;
+	pinDirection1 = PIN_MAIN_DIR1;
 
-	Motor_init(&s_mainMotor, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 0, 1);
+	Motor_init(&s_mainMotor, pinDirection1, pinDirection2, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 0, 1, MotorMode_DirectPwm);
 }
 
 void initFeatureMotor1() {
-	Pin pinDirection;
-	Pin_init(&pinDirection, &DDRD, &PORTD, PD3);
+	Pin pinDirection1, pinDirection2;
+	pinDirection1 = PIN_FEATURE1_DIR1;
 
-	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, pinDirection, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1);
+	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, pinDirection1, pinDirection2, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1, MotorMode_DirectPwm);
 }
 
 void initFeatureMotor2() {
-	Pin pinDirection;
-	Pin_init(&pinDirection, &DDRC, &PORTC, PC0);
+	Pin pinDirection1, pinDirection2;
+	pinDirection1 = PIN_FEATURE2_DIR1;
 
-	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, pinDirection, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1);
+	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, pinDirection1, pinDirection2, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1, MotorMode_DirectPwm);
 }
 
 void initStatusLed() {
-	Pin pinRed;
-	Pin_init(&pinRed, &DDRA, &PORTA, PA0);
-	Pin pinGreen;
-	Pin_init(&pinGreen, &DDRA, &PORTA, PA1);
-	Pin pinBlue;
-	Pin_init(&pinBlue, &DDRA, &PORTA, PA2);
+	Pin pinRed = PIN_LED_STATE_R;
+	Pin pinGreen = PIN_LED_STATE_G;
+	Pin pinBlue = PIN_LED_STATE_B;
 	RgbLed_init(&s_stateLed, pinRed, pinGreen, pinBlue);
 }
 
 void initLEDs() {
-	Pin_init(&s_ledFrontHeadlightLeft, &DDRA, &PORTA, PA3);
+	s_ledFrontHeadlightLeft = PIN_LED_FRONT_H_L;
 	Pin_setMode(&s_ledFrontHeadlightLeft, 1);
-	Pin_init(&s_ledFrontHeadlightRight, &DDRA, &PORTA, PA4);
+	s_ledFrontHeadlightRight = PIN_LED_FRONT_H_R;
 	Pin_setMode(&s_ledFrontHeadlightRight, 1);
-	Pin_init(&s_ledRearLightLeft, &DDRA, &PORTA, PA5);
+	
+	s_ledRearLightLeft = PIN_LED_REAR_L;
 	Pin_setMode(&s_ledRearLightLeft, 1);
-	Pin_init(&s_ledRearLightRight, &DDRA, &PORTA, PA6);
+	s_ledRearLightRight = PIN_LED_REAR_R;
 	Pin_setMode(&s_ledRearLightRight, 1);
 	
-	Pin_init(&s_ledFrontFoglightLeft, &DDRC, &PORTC, PC7);
+	s_ledFrontFoglightLeft = PIN_LED_FRONT_F_L;
 	Pin_setMode(&s_ledFrontFoglightLeft, 1);
-	Pin_init(&s_ledFrontFoglightRight, &DDRC, &PORTC, PC6);
+	s_ledFrontFoglightRight = PIN_LED_FRONT_F_R;
 	Pin_setMode(&s_ledFrontFoglightRight, 1);
-	Pin_init(&s_ledReversingLightLeft, &DDRB, &PORTB, PB0);
+	s_ledReversingLightLeft = PIN_LED_REVERSE_L;
 	Pin_setMode(&s_ledReversingLightLeft, 1);
-	Pin_init(&s_ledReversingLightRight, &DDRB, &PORTB, PB1);
+	s_ledReversingLightRight = PIN_LED_REVERSE_R;
 	Pin_setMode(&s_ledReversingLightRight, 1);
 }
 
 void nextTestStep() {
-	PORTB ^= (1<<PB2); 					// toggle PB2		
+	Pin_setValue(&s_pinDebug, (Pin_getValue(&s_pinDebug) + 1) % 2); //toggle debug pin
 }
 
 char s_uartRcvBuffer[RECEIVER_BUFF_SIZE + 1];
@@ -439,10 +472,10 @@ int main(void)
 	
 	MCUCSR = 0;
 	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
-	DDRB |= (1<<PB2); 						// PC1 is output
-	DDRC |= (1<<PC2); 						// PC2 is output
-	
-	PORTC |= (1 << PC2);
+	s_pinDebug = PIN_LED_DEBUG;
+	Pin_setMode(&s_pinDebug, 1); //output
+	Pin_setMode(&PIN_LED_DEBUG2, 1);
+	Pin_setValue(&PIN_LED_DEBUG2, 1);
 	
 	Clock_init(&s_clock, SERVO_TIMER_PERIOD_MS);
 	

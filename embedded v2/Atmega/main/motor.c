@@ -2,19 +2,26 @@
 
 void Motor_init(
 	Motor* motor,
-	Pin pinDirection,
+	Pin pinDirection1,
+	Pin pinDirection2,
 	uint16_t timerMax,
 	volatile uint16_t* timerCounterRegister16,
 	volatile uint8_t* timerCounterRegister8,
-	uint8_t isInverted) {
-		motor->pinDirection = pinDirection;
+	uint8_t isInverted,
+	MotorMode mode) {
+		motor->pinDirection1 = pinDirection1;
+		motor->pinDirection2 = pinDirection2;
 		motor->timerMax = timerMax;
 		motor->timerCounterRegister16 = timerCounterRegister16;
 		motor->timerCounterRegister8 = timerCounterRegister8;
 		motor->isInverted = isInverted;
+		motor->mode = mode;
 		
-		Pin_setMode(&pinDirection, 1); //output
-		Pin_setValue(&pinDirection, 0);
+		Pin_setMode(&pinDirection1, 1); //output
+		Pin_setValue(&pinDirection1, 0);
+
+		Pin_setMode(&pinDirection2, 1); //output
+		Pin_setValue(&pinDirection2, 0);
 
 		Motor_setDirection(motor, 1);		
 		Motor_setSpeedPercent(motor, 0);
@@ -22,7 +29,6 @@ void Motor_init(
 
 void Motor_setDirection(Motor* motor, uint8_t direction) {
 	motor->direction = direction;
-	Pin_setValue(&motor->pinDirection, direction);
 	Motor_adaptSignal(motor);
 }
 
@@ -40,9 +46,23 @@ void Motor_setSpeedPercent(Motor* motor, float percent) {
 void Motor_adaptSignal(Motor* motor) {
 	float percent = motor->speedPercent;
 
-	if(motor->direction == 1) {
-		//reverse signal as we are having a 1 as reference
-		percent = 100 - percent;
+	if(motor->mode == MotorMode_DirectPwm) {
+		Pin_setValue(&motor->pinDirection1, motor->direction);
+
+		if(motor->direction == 1) {
+			//reverse signal as we are having a 1 as reference
+			percent = 100 - percent;
+		}
+	} else if(motor->mode == MotorMode_LeftRightPwm) {
+		uint8_t directionLeft = 0;
+		uint8_t directionRight = 0;
+		if(motor->direction == 0) {
+			directionLeft = 1;
+		} else {
+			directionRight = 1;
+		}
+		Pin_setValue(&motor->pinDirection1, directionLeft);
+		Pin_setValue(&motor->pinDirection2, directionRight);
 	}
 	if(motor->isInverted) {
 		percent = 100 - percent;
@@ -58,13 +78,15 @@ void Motor_adaptSignal(Motor* motor) {
 void TimeoutMotor_init(
     TimeoutMotor* tMotor, 
     float tickDuration,
-    Pin pinDirection,
+    Pin pinDirection1,
+	Pin pinDirection2,
 	uint16_t timerMax,
 	volatile uint16_t* timerCounterRegister16,
 	volatile uint8_t* timerCounterRegister8, 
-    uint8_t isInverted) {
+    uint8_t isInverted,
+	MotorMode mode) {
     
-    Motor_init(&tMotor->motor, pinDirection, timerMax, timerCounterRegister16, timerCounterRegister8, isInverted);
+    Motor_init(&tMotor->motor, pinDirection1, pinDirection2, timerMax, timerCounterRegister16, timerCounterRegister8, isInverted, mode);
     tMotor->tickDuration = tickDuration;
     tMotor->remaining = 0;
     tMotor->speedPercent = 0;

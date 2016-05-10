@@ -28,6 +28,13 @@ void Pin_setValue(Pin* pin, uint8_t value) {
 	}
 }
 
+uint8_t Pin_getValue(Pin* pin) {
+	if(pin->definitionRegister == 0) {
+		return;
+	}
+	return (*pin->portRegister & (1 << pin->offset)) >> pin->offset;	
+}
+
 void SoftPwmPin_init(SoftPwmPin* softPwmPin, Pin pin) {
 	softPwmPin->counter = 0;
 	softPwmPin->value = 0;
