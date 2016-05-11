@@ -5,7 +5,8 @@
 
 typedef enum {
 	MotorMode_DirectPwm,
-	MotorMode_LeftRightPwm
+	MotorMode_LeftRightPwm,
+	MotorMode_SpeedDirection
 } MotorMode;
 
 typedef struct {

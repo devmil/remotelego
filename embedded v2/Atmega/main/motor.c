@@ -53,6 +53,8 @@ void Motor_adaptSignal(Motor* motor) {
 			//reverse signal as we are having a 1 as reference
 			percent = 100 - percent;
 		}
+	} else if(motor->mode == MotorMode_SpeedDirection) {
+		Pin_setValue(&motor->pinDirection1, motor->direction);		
 	} else if(motor->mode == MotorMode_LeftRightPwm) {
 		uint8_t directionLeft = 0;
 		uint8_t directionRight = 0;

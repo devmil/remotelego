@@ -13,11 +13,10 @@
 
 //For B0: BIT(B,0)
 #define BIT(p,b)                (P##p##b)
-#define PORT(p,b)               (PORT##p)
-#define PIN(p,b)                (PIN##p)
-#define DDR(p,b)                (DDR##p)
+#define PORT(p)                 (PORT##p)
+#define DDR(p)                  (DDR##p)
 
-#define INIT_PIN(port, bit) { .definitionRegister = &DDR(port, bit), .portRegister = &PORT(port, bit), .offset = BIT(port, bit) }
+#define INIT_PIN(port, bit) { .definitionRegister = &DDR(port), .portRegister = &PORT(port), .offset = BIT(port, bit) }
 #define D_PIN(name, port, bit) Pin PIN_##name = INIT_PIN(port, bit);
 
 
@@ -37,9 +36,9 @@ D_PIN(SERVO_SIGNAL,    B, 3)  /* -|                          |- */ D_PIN(LED_FRO
 /*        XTAL1           */  /* -|                          |- */ D_PIN(LED_FRONT_F_R,   C, 6)
 /*        RXD             */  /* -|                          |- */ /*  C5                    */
 /*        TXD             */  /* -|                          |- */ /*  C4                    */
-/*                D2      */  /* -|                          |- */ /*  C3                    */
+D_PIN(FEATURE1_DIR2,   D, 2)  /* -|                          |- */ /*  C3                    */
 D_PIN(FEATURE1_DIR1,   D, 3)  /* -|                          |- */ D_PIN(LED_DEBUG2,      C, 2)
-D_PIN(FEATURE1_PWM,    D, 4)  /* -|                          |- */ /*  C1                    */
+D_PIN(FEATURE1_PWM,    D, 4)  /* -|                          |- */ D_PIN(FEATURE2_DIR2,   C, 1)
 D_PIN(MAIN_PWM,        D, 5)  /* -|                          |- */ D_PIN(FEATURE2_DIR1,   C, 0)
 D_PIN(MAIN_DIR1,       D, 6)  /* -|                          |- */ D_PIN(FEATURE2_PWM,    D, 7)
                               /*  ----------------------------  */
@@ -53,12 +52,12 @@ D_PIN(MAIN_DIR1,       D, 6)  /* -|                          |- */ D_PIN(FEATURE
 #define SERVO_MIN_MS				0.8f
 #define SERVO_MAX_MS				2.3f
 
-#define MAIN_MOTOR_PRESCALER		64
-#define MAIN_MOTOR_PRESCALER_BITS	(1<<CS11) | (1<<CS10)
+#define MAIN_MOTOR_PRESCALER		/*	8			*//*	1			*/	64						
+#define MAIN_MOTOR_PRESCALER_BITS	/*	(1<<CS11)	*//*	(1<<CS10) 	*/	(1<<CS11) | (1<<CS10)	
 #define MAIN_MOTOR_TIMER_TICKS		255
 
-#define FEAT_MOTOR_PRESCALER		64
-#define FEAT_MOTOR_PRESCALER_BITS	(1<<CS21) | (1<<CS10)
+#define FEAT_MOTOR_PRESCALER		/*	8			*//*	1         	*/	64						
+#define FEAT_MOTOR_PRESCALER_BITS	/*	(1<<CS21)	*//*	(1<<CS20) 	*/	(1<<CS21) | (1<<CS10)	
 #define FEAT_MOTOR_TIMER_TICKS		255
 
 #define UART_BAUDRATE				115200
@@ -130,16 +129,8 @@ Motor s_mainMotor;
 TimeoutMotor s_featureMotor1;
 TimeoutMotor s_featureMotor2;
 RgbLed s_stateLed;
-Pin s_ledFrontHeadlightLeft;
-Pin s_ledFrontHeadlightRight;
-Pin s_ledRearLightLeft;
-Pin s_ledRearLightRight;
-Pin s_ledFrontFoglightLeft;
-Pin s_ledFrontFoglightRight;
-Pin s_ledReversingLightLeft;
-Pin s_ledReversingLightRight;
 
-Pin s_pinDebug;
+Pin s_pinEmpty = { 0, 0, 0 };
 
 volatile float s_millisecondsSinceLastControl = 0;
 uint8_t s_controllerTimeoutReached = 0;
@@ -188,56 +179,59 @@ void initMotorTimer() {
 }
 
 void initMainMotor() {
-	Pin pinDirection1, pinDirection2;
-	pinDirection1 = PIN_MAIN_DIR1;
-
-	Motor_init(&s_mainMotor, pinDirection1, pinDirection2, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 0, 1, MotorMode_DirectPwm);
+	Motor_init(&s_mainMotor, PIN_MAIN_DIR1, s_pinEmpty, MAIN_MOTOR_TIMER_TICKS, &OCR1A, 0, 1, MotorMode_SpeedDirection);
 }
 
 void initFeatureMotor1() {
-	Pin pinDirection1, pinDirection2;
-	pinDirection1 = PIN_FEATURE1_DIR1;
-
-	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, pinDirection1, pinDirection2, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1, MotorMode_DirectPwm);
+	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, PIN_FEATURE1_DIR1, PIN_FEATURE1_DIR2, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 0, MotorMode_LeftRightPwm);
 }
 
 void initFeatureMotor2() {
-	Pin pinDirection1, pinDirection2;
-	pinDirection1 = PIN_FEATURE2_DIR1;
-
-	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, pinDirection1, pinDirection2, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1, MotorMode_DirectPwm);
+	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, PIN_FEATURE2_DIR1, PIN_FEATURE2_DIR2, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 0, MotorMode_LeftRightPwm);
 }
 
 void initStatusLed() {
-	Pin pinRed = PIN_LED_STATE_R;
-	Pin pinGreen = PIN_LED_STATE_G;
-	Pin pinBlue = PIN_LED_STATE_B;
-	RgbLed_init(&s_stateLed, pinRed, pinGreen, pinBlue);
+	RgbLed_init(&s_stateLed, PIN_LED_STATE_R, PIN_LED_STATE_G, PIN_LED_STATE_B);
 }
 
 void initLEDs() {
-	s_ledFrontHeadlightLeft = PIN_LED_FRONT_H_L;
-	Pin_setMode(&s_ledFrontHeadlightLeft, 1);
-	s_ledFrontHeadlightRight = PIN_LED_FRONT_H_R;
-	Pin_setMode(&s_ledFrontHeadlightRight, 1);
+	Pin_setMode(&PIN_LED_FRONT_H_L, 1);
+	Pin_setMode(&PIN_LED_FRONT_H_R, 1);
 	
-	s_ledRearLightLeft = PIN_LED_REAR_L;
-	Pin_setMode(&s_ledRearLightLeft, 1);
-	s_ledRearLightRight = PIN_LED_REAR_R;
-	Pin_setMode(&s_ledRearLightRight, 1);
+	Pin_setMode(&PIN_LED_REAR_L, 1);
+	Pin_setMode(&PIN_LED_REAR_R, 1);
 	
-	s_ledFrontFoglightLeft = PIN_LED_FRONT_F_L;
-	Pin_setMode(&s_ledFrontFoglightLeft, 1);
-	s_ledFrontFoglightRight = PIN_LED_FRONT_F_R;
-	Pin_setMode(&s_ledFrontFoglightRight, 1);
-	s_ledReversingLightLeft = PIN_LED_REVERSE_L;
-	Pin_setMode(&s_ledReversingLightLeft, 1);
-	s_ledReversingLightRight = PIN_LED_REVERSE_R;
-	Pin_setMode(&s_ledReversingLightRight, 1);
+	Pin_setMode(&PIN_LED_FRONT_F_L, 1);
+	Pin_setMode(&PIN_LED_FRONT_F_R, 1);
+	Pin_setMode(&PIN_LED_REVERSE_L, 1);
+	Pin_setMode(&PIN_LED_REVERSE_R, 1);
 }
 
+// uint8_t s_featureMotorTestCounter = 0;
+
 void nextTestStep() {
-	Pin_setValue(&s_pinDebug, (Pin_getValue(&s_pinDebug) + 1) % 2); //toggle debug pin
+	Pin_setValue(&PIN_LED_DEBUG, (Pin_getValue(&PIN_LED_DEBUG) + 1) % 2); //toggle debug pin
+	
+	// s_featureMotorTestCounter++;
+	// if(s_featureMotorTestCounter == 1) {
+	// 	TimeoutMotor_setDirection(&s_featureMotor1, 1);
+	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor1, 60);
+	// 	TimeoutMotor_setRemaining(&s_featureMotor1, 2000);
+	// 	TimeoutMotor_setDirection(&s_featureMotor2, 1);
+	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 60);
+	// 	TimeoutMotor_setRemaining(&s_featureMotor2, 2000);
+	// }
+	// if(s_featureMotorTestCounter == 3) {
+	// 	TimeoutMotor_setDirection(&s_featureMotor1, 0);
+	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor1, 60);
+	// 	TimeoutMotor_setRemaining(&s_featureMotor1, 2000);
+	// 	TimeoutMotor_setDirection(&s_featureMotor2, 0);
+	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 60);
+	// 	TimeoutMotor_setRemaining(&s_featureMotor2, 2000);
+	// }
+	// if(s_featureMotorTestCounter >= 4) {
+	// 	s_featureMotorTestCounter = 0;
+	// }
 }
 
 char s_uartRcvBuffer[RECEIVER_BUFF_SIZE + 1];
@@ -267,55 +261,55 @@ uint8_t handleCommand(char* command, char* value) {
 		result = 1;
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontHeadlightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontHeadlightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontHeadlightLeft, on == 0 ? 0 : 1);
-		Pin_setValue(&s_ledFrontHeadlightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledRearLightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledRearLightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledRearLightLeft, on == 0 ? 0 : 1);
-		Pin_setValue(&s_ledRearLightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontFoglightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontFoglightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledFrontFoglightLeft, on == 0 ? 0 : 1);
-		Pin_setValue(&s_ledFrontFoglightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledReversingLightLeft, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledReversingLightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&s_ledReversingLightLeft, on == 0 ? 0 : 1);
-		Pin_setValue(&s_ledReversingLightRight, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? 0 : 1);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
@@ -472,8 +466,7 @@ int main(void)
 	
 	MCUCSR = 0;
 	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
-	s_pinDebug = PIN_LED_DEBUG;
-	Pin_setMode(&s_pinDebug, 1); //output
+	Pin_setMode(&PIN_LED_DEBUG, 1); //output
 	Pin_setMode(&PIN_LED_DEBUG2, 1);
 	Pin_setValue(&PIN_LED_DEBUG2, 1);
 	

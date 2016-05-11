@@ -30,7 +30,7 @@ void Pin_setValue(Pin* pin, uint8_t value) {
 
 uint8_t Pin_getValue(Pin* pin) {
 	if(pin->definitionRegister == 0) {
-		return;
+		return 0;
 	}
 	return (*pin->portRegister & (1 << pin->offset)) >> pin->offset;	
 }
