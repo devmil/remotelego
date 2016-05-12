@@ -18,10 +18,10 @@ void Motor_init(
 		motor->mode = mode;
 		
 		Pin_setMode(&pinDirection1, 1); //output
-		Pin_setValue(&pinDirection1, 0);
+		Pin_setValue(&pinDirection1, PinValue_Low);
 
 		Pin_setMode(&pinDirection2, 1); //output
-		Pin_setValue(&pinDirection2, 0);
+		Pin_setValue(&pinDirection2, PinValue_Low);
 
 		Motor_setDirection(motor, 1);		
 		Motor_setSpeedPercent(motor, 0);
@@ -47,21 +47,39 @@ void Motor_adaptSignal(Motor* motor) {
 	float percent = motor->speedPercent;
 
 	if(motor->mode == MotorMode_DirectPwm) {
-		Pin_setValue(&motor->pinDirection1, motor->direction);
+		PinValue directionVal = PinValue_Low;
+		directionVal = motor->direction == 0 ? PinValue_Low : PinValue_High;
 
 		if(motor->direction == 1) {
 			//reverse signal as we are having a 1 as reference
 			percent = 100 - percent;
 		}
+		if(motor->speedPercent == 0) {
+			//disable direction pin by setting it to the PWM value
+			directionVal = motor->isInverted ? PinValue_High : PinValue_Low;
+		}
+		Pin_setValue(&motor->pinDirection1, directionVal);		
 	} else if(motor->mode == MotorMode_SpeedDirection) {
-		Pin_setValue(&motor->pinDirection1, motor->direction);		
+		PinValue directionVal = PinValue_Low;
+		directionVal = motor->direction == 0 ? PinValue_Low : PinValue_High;
+		
+		if(motor->speedPercent == 0) {
+			//disable direction pin by setting it to the PWM value
+			directionVal = motor->isInverted ? PinValue_High : PinValue_Low;
+		}
+		Pin_setValue(&motor->pinDirection1, directionVal);		
 	} else if(motor->mode == MotorMode_LeftRightPwm) {
-		uint8_t directionLeft = 0;
-		uint8_t directionRight = 0;
+		PinValue directionLeft = PinValue_Low;
+		PinValue directionRight = PinValue_Low;
 		if(motor->direction == 0) {
-			directionLeft = 1;
+			directionLeft = PinValue_High;
 		} else {
-			directionRight = 1;
+			directionRight = PinValue_High;
+		}
+		if(motor->speedPercent == 0) {
+			//disable direction pin by setting left and right to 0
+			directionLeft = PinValue_Low;
+			directionRight = PinValue_Low;
 		}
 		Pin_setValue(&motor->pinDirection1, directionLeft);
 		Pin_setValue(&motor->pinDirection2, directionRight);

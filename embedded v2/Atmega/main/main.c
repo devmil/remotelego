@@ -113,8 +113,8 @@ void Servo_setPercent(float percent) {
 }
 
 void Servo_init() {
-	Pin_setMode(&PIN_SERVO_SIGNAL, 1); 		// PB3 == OC0 is servo output
-	Pin_setValue(&PIN_SERVO_SIGNAL, 0); 	//pull down
+	Pin_setMode(&PIN_SERVO_SIGNAL, PinMode_Output); 		// PB3 == OC0 is servo output
+	Pin_setValue(&PIN_SERVO_SIGNAL, PinValue_Low); 			//pull down
 
 	TCCR0 |= (1<<WGM00) | (1<<WGM01);		// fast PWM mode
 	TCCR0 |= (1<<COM01);					// compare output mode
@@ -163,19 +163,19 @@ ISR( TIMER0_OVF_vect )
 }
 
 void initMotorTimer() {
-	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); //Timer1A: inverting PWM
-	TCCR1A |= (1 << COM1B0) | (1 << COM1B1); //Timer1B: inverting PWM 
-	TCCR1A |= (1 << WGM10); 				//Timer1: Phase correct PWM
+	TCCR1A |= (1 << COM1A0) | (1 << COM1A1); 				//Timer1A: inverting PWM
+	TCCR1A |= (1 << COM1B0) | (1 << COM1B1); 				//Timer1B: inverting PWM 
+	TCCR1A |= (1 << WGM10); 								//Timer1: Phase correct PWM
 	TCCR1B |= MAIN_MOTOR_PRESCALER_BITS; 
 	
-	Pin_setMode(&PIN_MAIN_PWM, 1);				// PD5=OC1A is output
-	Pin_setMode(&PIN_FEATURE1_PWM, 1); 		// PD4=OC1B is output
+	Pin_setMode(&PIN_MAIN_PWM, PinMode_Output);				// PD5=OC1A is output
+	Pin_setMode(&PIN_FEATURE1_PWM, PinMode_Output); 		// PD4=OC1B is output
 	
-	TCCR2 |= (1 << COM20) | (1 << COM21); 	//Timer1A: inverting PWM
-	TCCR2 |= (1 << WGM20); 					//Timer2: Phase correct PWM
+	TCCR2 |= (1 << COM20) | (1 << COM21); 					//Timer1A: inverting PWM
+	TCCR2 |= (1 << WGM20); 									//Timer2: Phase correct PWM
 	TCCR2 |= FEAT_MOTOR_PRESCALER_BITS; 
 
-	Pin_setMode(&PIN_FEATURE2_PWM, 1);			// PD7=OC2 is output
+	Pin_setMode(&PIN_FEATURE2_PWM, PinMode_Output);			// PD7=OC2 is output
 }
 
 void initMainMotor() {
@@ -183,11 +183,11 @@ void initMainMotor() {
 }
 
 void initFeatureMotor1() {
-	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, PIN_FEATURE1_DIR1, PIN_FEATURE1_DIR2, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 0, MotorMode_LeftRightPwm);
+	TimeoutMotor_init(&s_featureMotor1, SERVO_TIMER_PERIOD_MS, PIN_FEATURE1_DIR1, PIN_FEATURE1_DIR2, MAIN_MOTOR_TIMER_TICKS, &OCR1B, 0, 1, MotorMode_LeftRightPwm);
 }
 
 void initFeatureMotor2() {
-	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, PIN_FEATURE2_DIR1, PIN_FEATURE2_DIR2, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 0, MotorMode_LeftRightPwm);
+	TimeoutMotor_init(&s_featureMotor2, SERVO_TIMER_PERIOD_MS, PIN_FEATURE2_DIR1, PIN_FEATURE2_DIR2, FEAT_MOTOR_TIMER_TICKS, 0, &OCR2, 1, MotorMode_LeftRightPwm);
 }
 
 void initStatusLed() {
@@ -195,43 +195,21 @@ void initStatusLed() {
 }
 
 void initLEDs() {
-	Pin_setMode(&PIN_LED_FRONT_H_L, 1);
-	Pin_setMode(&PIN_LED_FRONT_H_R, 1);
+	Pin_setMode(&PIN_LED_FRONT_H_L, PinMode_Output);
+	Pin_setMode(&PIN_LED_FRONT_H_R, PinMode_Output);
 	
-	Pin_setMode(&PIN_LED_REAR_L, 1);
-	Pin_setMode(&PIN_LED_REAR_R, 1);
+	Pin_setMode(&PIN_LED_REAR_L, PinMode_Output);
+	Pin_setMode(&PIN_LED_REAR_R, PinMode_Output);
 	
-	Pin_setMode(&PIN_LED_FRONT_F_L, 1);
-	Pin_setMode(&PIN_LED_FRONT_F_R, 1);
-	Pin_setMode(&PIN_LED_REVERSE_L, 1);
-	Pin_setMode(&PIN_LED_REVERSE_R, 1);
+	Pin_setMode(&PIN_LED_FRONT_F_L, PinMode_Output);
+	Pin_setMode(&PIN_LED_FRONT_F_R, PinMode_Output);
+	Pin_setMode(&PIN_LED_REVERSE_L, PinMode_Output);
+	Pin_setMode(&PIN_LED_REVERSE_R, PinMode_Output);
 }
 
-// uint8_t s_featureMotorTestCounter = 0;
-
 void nextTestStep() {
-	Pin_setValue(&PIN_LED_DEBUG, (Pin_getValue(&PIN_LED_DEBUG) + 1) % 2); //toggle debug pin
-	
-	// s_featureMotorTestCounter++;
-	// if(s_featureMotorTestCounter == 1) {
-	// 	TimeoutMotor_setDirection(&s_featureMotor1, 1);
-	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor1, 60);
-	// 	TimeoutMotor_setRemaining(&s_featureMotor1, 2000);
-	// 	TimeoutMotor_setDirection(&s_featureMotor2, 1);
-	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 60);
-	// 	TimeoutMotor_setRemaining(&s_featureMotor2, 2000);
-	// }
-	// if(s_featureMotorTestCounter == 3) {
-	// 	TimeoutMotor_setDirection(&s_featureMotor1, 0);
-	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor1, 60);
-	// 	TimeoutMotor_setRemaining(&s_featureMotor1, 2000);
-	// 	TimeoutMotor_setDirection(&s_featureMotor2, 0);
-	// 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 60);
-	// 	TimeoutMotor_setRemaining(&s_featureMotor2, 2000);
-	// }
-	// if(s_featureMotorTestCounter >= 4) {
-	// 	s_featureMotorTestCounter = 0;
-	// }
+	PinValue currentValue = Pin_getValue(&PIN_LED_DEBUG);
+	Pin_setValue(&PIN_LED_DEBUG, currentValue == PinValue_High ? PinValue_Low : PinValue_High); //toggle debug pin
 }
 
 char s_uartRcvBuffer[RECEIVER_BUFF_SIZE + 1];
@@ -261,55 +239,55 @@ uint8_t handleCommand(char* command, char* value) {
 		result = 1;
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? 0 : 1);
-		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? 0 : 1);
-		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? 0 : 1);
-		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_RIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? 0 : 1);
-		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? 0 : 1);
+		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
@@ -449,9 +427,19 @@ void handleUart() {
 	} while(resultErrorCode == 0);
 }
 
-void handleControllerTimeout() {
+void stopAll() {
 	Motor_setSpeedPercent(&s_mainMotor, 0);
 	Servo_setPercent(50);
+	TimeoutMotor_setDirection(&s_featureMotor1, 1);
+	TimeoutMotor_setSpeedPercent(&s_featureMotor1, 0);
+	TimeoutMotor_setRemaining(&s_featureMotor1, 0);
+	TimeoutMotor_setDirection(&s_featureMotor2, 1);
+	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 0);
+	TimeoutMotor_setRemaining(&s_featureMotor2, 0);	
+}
+
+void handleControllerTimeout() {
+	stopAll();
 }
 
 int main(void)
@@ -464,11 +452,12 @@ int main(void)
 	if(MCUCSR & (1<<WDRF )) reason = "Watchdog reset!\r\n";
 	if(MCUCSR & (1<<JTRF )) reason = "JTAG reset!\r\n";
 	
-	MCUCSR = 0;
+	MCUCSR = 0; //reset power up reason register
+	
 	uart_init(UART_BAUD_SELECT(UART_BAUDRATE, F_CPU));
-	Pin_setMode(&PIN_LED_DEBUG, 1); //output
-	Pin_setMode(&PIN_LED_DEBUG2, 1);
-	Pin_setValue(&PIN_LED_DEBUG2, 1);
+	Pin_setMode(&PIN_LED_DEBUG, PinMode_Output);
+	Pin_setMode(&PIN_LED_DEBUG2, PinMode_Output);
+	Pin_setValue(&PIN_LED_DEBUG2, PinValue_High);
 	
 	Clock_init(&s_clock, SERVO_TIMER_PERIOD_MS);
 	
@@ -485,6 +474,8 @@ int main(void)
 	
 	TIMSK |= (1<<TOIE0);					// enable timer overflow interrupt 
 
+
+	stopAll();
 	sei();
 	
 	uart_puts(reason);

@@ -15,6 +15,18 @@ enum class CarState {
   ClientConnected
 };
 
+enum class TrunkState {
+  Unknown = 0,
+  Closed = 1,
+  Open = 2
+};
+
+enum class MovableFrontLightState {
+  Unknown = 0,
+  Hidden = 1,
+  Active = 2
+};
+
 class LegoCarModel {
 public:
   LegoCarModel();
@@ -32,12 +44,20 @@ public:
   CarState getCarState();
   void setCarState(CarState state);
 
+  TrunkState getTrunkState();
+  void setTrunkState(TrunkState trunkState);
+
+  MovableFrontLightState getMovableFrontLightState();
+  void setMovableFrontLightState(MovableFrontLightState mflState);
+
   void stopAll();
 private:
   int8_t m_speedPercent;
   int8_t m_steeringDegrees;
   LightState m_lightState;
   CarState m_carState;
+  TrunkState m_trunkState;
+  MovableFrontLightState m_mflState;
 
   uint32_t getStateColor();
   void sendLightState();

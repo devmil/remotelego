@@ -6,33 +6,33 @@ void Pin_init(Pin* pin, volatile uint8_t* definitionRegister, volatile uint8_t* 
 	pin->offset = offset;
 }
 
-void Pin_setMode(Pin* pin, uint8_t mode) {
+void Pin_setMode(Pin* pin, PinMode mode) {
 	if(pin->definitionRegister == 0) {
 		return;
 	}
-	if(mode != 0) {
+	if(mode == PinMode_Output) {
 		*pin->definitionRegister |= (1 << pin->offset);
 	} else {
 		*pin->definitionRegister &= ~(1 << pin->offset);
 	}
 }
 
-void Pin_setValue(Pin* pin, uint8_t value) {
+void Pin_setValue(Pin* pin, PinValue value) {
 	if(pin->definitionRegister == 0) {
 		return;
 	}
-	if(value != 0) {
+	if(value == PinValue_High) {
 		*pin->portRegister |= (1 << pin->offset);
 	} else {
 		*pin->portRegister &= ~(1 << pin->offset);
 	}
 }
 
-uint8_t Pin_getValue(Pin* pin) {
+PinValue Pin_getValue(Pin* pin) {
 	if(pin->definitionRegister == 0) {
 		return 0;
 	}
-	return (*pin->portRegister & (1 << pin->offset)) >> pin->offset;	
+	return (PinValue)(*pin->portRegister & (1 << pin->offset)) >> pin->offset;	
 }
 
 void SoftPwmPin_init(SoftPwmPin* softPwmPin, Pin pin) {
@@ -45,12 +45,12 @@ void SoftPwmPin_init(SoftPwmPin* softPwmPin, Pin pin) {
 }
 
 void SoftPwmPin_setValue(SoftPwmPin* softPwmPin, uint8_t value) {
-	softPwmPin->value = value;
+	softPwmPin->value = (uint8_t)value;
 }
 
 void SoftPwmPin_tick(SoftPwmPin* softPwmPin) {
 	softPwmPin->counter++;
-	uint8_t newValue = (softPwmPin->counter > softPwmPin->value) ? 0 : 1;
+	PinValue newValue = (softPwmPin->counter > softPwmPin->value) ? PinValue_Low : PinValue_High;
 	if(newValue != softPwmPin->lastPinValue) {
 		Pin_setValue(&softPwmPin->pin, newValue);
 		softPwmPin->lastPinValue = newValue;
