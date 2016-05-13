@@ -11,9 +11,46 @@
 
     <de.devmil.legologic.DirectionControl
         android:id="@+id/activity_control_direction"
+        android:layout_above="@+id/activity_control_ll_switches"
         android:layout_margin="10dp"
         android:layout_centerInParent="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@id/activity_control_ll_switches"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/activity_control_tv_trunk"
+            android:text="@string/activity_control_trunk"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <Switch
+            android:id="@+id/activity_control_sw_trunk"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <TextView
+            android:id="@+id/activity_control_tv_mfl"
+            android:text="@string/activity_control_front_lights"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <Switch
+            android:id="@+id/activity_control_sw_mfl"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+    </LinearLayout>
 
 </RelativeLayout>

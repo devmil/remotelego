@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Lego Control</string>
+    <string name="activity_control_trunk">Trunk</string>
+    <string name="activity_control_front_lights">Front lights</string>
 </resources>
