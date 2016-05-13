@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -35,10 +37,17 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
 
     private DirectionControl mDirectionControl;
     private LinearLayout mLinearLayoutSwitches;
+
+    LinearLayout mllTrunk;
+    LinearLayout mllMFL;
+    LinearLayout mllBlink;
+
     private Switch mSwitchTrunk;
-    private TextView mTextTrunk;
     private Switch mSwitchMFL;
-    private TextView mTextMFL;
+    private RadioButton mrbBlinkOff;
+    private RadioButton mrbBlinkL;
+    private RadioButton mrbBlinkR;
+    private RadioButton mrbBlinkLR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +56,17 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
 
         mDirectionControl = (DirectionControl)findViewById(R.id.activity_control_direction);
         mLinearLayoutSwitches = (LinearLayout)findViewById(R.id.activity_control_ll_switches);
+
+        mllTrunk = (LinearLayout)findViewById(R.id.activity_control_ll_trunk);
+        mllMFL = (LinearLayout)findViewById(R.id.activity_control_ll_mfl);
+        mllBlink = (LinearLayout)findViewById(R.id.activity_control_ll_blink);
+
         mSwitchTrunk = (Switch)findViewById(R.id.activity_control_sw_trunk);
-        mTextTrunk = (TextView)findViewById(R.id.activity_control_tv_trunk);
         mSwitchMFL = (Switch)findViewById(R.id.activity_control_sw_mfl);
-        mTextMFL = (TextView)findViewById(R.id.activity_control_tv_mfl);
+        mrbBlinkOff = (RadioButton)findViewById(R.id.activity_control_rb_blink_off);
+        mrbBlinkL = (RadioButton)findViewById(R.id.activity_control_rb_blink_l);
+        mrbBlinkR = (RadioButton)findViewById(R.id.activity_control_rb_blink_r);
+        mrbBlinkLR = (RadioButton)findViewById(R.id.activity_control_rb_blink_lr);
 
         mDirectionControl.setDirectionChangedListener(new DirectionControl.IDirectionChangedListener() {
             @Override
@@ -80,36 +96,123 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
             }
         });
 
+        mrbBlinkOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    CarHandler ch = getCarHandler();
+                    if(ch != null) {
+                        ch.setBlinkMode(CarHandler.BlinkMode.Off);
+                    }
+                }
+            }
+        });
+        mrbBlinkL.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    CarHandler ch = getCarHandler();
+                    if(ch != null) {
+                        ch.setBlinkMode(CarHandler.BlinkMode.Left);
+                    }
+                }
+            }
+        });
+        mrbBlinkR.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    CarHandler ch = getCarHandler();
+                    if(ch != null) {
+                        ch.setBlinkMode(CarHandler.BlinkMode.Right);
+                    }
+                }
+            }
+        });
+        mrbBlinkLR.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+                    CarHandler ch = getCarHandler();
+                    if(ch != null) {
+                        ch.setBlinkMode(CarHandler.BlinkMode.Both);
+                    }
+                }
+            }
+        });
+
         adaptSwitchVisibility();
+        adaptModelState();
     }
 
     private void adaptSwitchVisibility() {
         boolean hasFeature = false;
         CarHandler ch = getCarHandler();
-        if(ch == null) {
-            return;
-        }
-        if(ch.hasTrunk()) {
-            mSwitchTrunk.setVisibility(View.VISIBLE);
-            mTextTrunk.setVisibility(View.VISIBLE);
+        if(ch != null && ch.hasTrunk()) {
+            mllTrunk.setVisibility(View.VISIBLE);
             hasFeature = true;
         } else {
-            mSwitchTrunk.setVisibility(View.GONE);
-            mTextTrunk.setVisibility(View.GONE);
+            mllTrunk.setVisibility(View.GONE);
         }
-        if(ch.hasMovableFrontLight()) {
-            mSwitchMFL.setVisibility(View.VISIBLE);
-            mTextMFL.setVisibility(View.VISIBLE);
+        if(ch != null && ch.hasMovableFrontLight()) {
+            mllMFL.setVisibility(View.VISIBLE);
             hasFeature = true;
         } else {
-            mSwitchMFL.setVisibility(View.GONE);
-            mTextMFL.setVisibility(View.GONE);
+            mllMFL.setVisibility(View.GONE);
+        }
+        if(ch != null && ch.hasBlinkOption()) {
+            mllBlink.setVisibility(View.VISIBLE);
+            hasFeature = true;
+        } else {
+            mllBlink.setVisibility(View.GONE);
         }
 
         if(hasFeature) {
             mLinearLayoutSwitches.setVisibility(View.VISIBLE);
         } else {
             mLinearLayoutSwitches.setVisibility(View.GONE);
+        }
+    }
+
+    private void adaptModelState() {
+        CarHandler ch = getCarHandler();
+        if(ch != null) {
+            switch(ch.getBlinkMode()) {
+                case Off:
+                    mrbBlinkOff.setChecked(true);
+                    break;
+                case Left:
+                    mrbBlinkL.setChecked(true);
+                    break;
+                case Right:
+                    mrbBlinkR.setChecked(true);
+                    break;
+                case Both:
+                    mrbBlinkLR.setChecked(true);
+                    break;
+                default:
+                    break;
+            }
+            switch(ch.getMovableFrontLightState()) {
+                case Hidden:
+                    mSwitchMFL.setChecked(false);
+                    break;
+                case Active:
+                    mSwitchMFL.setChecked(true);
+                    break;
+                default:
+                    break;
+            }
+            switch(ch.getTrunkState()) {
+                case Closed:
+                    mSwitchTrunk.setChecked(false);
+                    break;
+                case Open:
+                    mSwitchTrunk.setChecked(true);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -144,6 +247,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
             public void run() {
                 if(isReady) {
                     adaptSwitchVisibility();
+                    adaptModelState();
                 }
             }
         });

@@ -10,6 +10,7 @@
 #include "pin.h"
 #include "led.h"
 #include "motor.h"
+#include "blink.h"
 
 //For B0: BIT(B,0)
 #define BIT(p,b)                (P##p##b)
@@ -21,13 +22,13 @@
 
 
                               /*  ----------------------------  */
-D_PIN(LED_REVERSE_L,   B, 0)  /* -|           \____/         |- */ D_PIN(LED_STATE_R,     A, 0)
-D_PIN(LED_REVERSE_R,   B, 1)  /* -|                          |- */ D_PIN(LED_STATE_G,     A, 1)
+D_PIN(LED_REVERSE,     B, 0)  /* -|           \____/         |- */ D_PIN(LED_STATE_R,     A, 0)
+D_PIN(LED_REAR,        B, 1)  /* -|                          |- */ D_PIN(LED_STATE_G,     A, 1)
 D_PIN(LED_DEBUG,       B, 2)  /* -|                          |- */ D_PIN(LED_STATE_B,     A, 2)
-D_PIN(SERVO_SIGNAL,    B, 3)  /* -|                          |- */ D_PIN(LED_FRONT_H_L,   A, 3)
-/*        SS              */  /* -|                          |- */ D_PIN(LED_FRONT_H_R,   A, 4)
-/*        MOSI            */  /* -|                          |- */ D_PIN(LED_REAR_L,      A, 5)
-/*        MISO            */  /* -|                          |- */ D_PIN(LED_REAR_R,      A, 6)
+D_PIN(SERVO_SIGNAL,    B, 3)  /* -|                          |- */ D_PIN(LED_FRONT_H,     A, 3)
+/*        SS              */  /* -|                          |- */ D_PIN(LED_BLINK_L,     A, 4)
+/*        MOSI            */  /* -|                          |- */ D_PIN(LED_BLINK_R,     A, 5)
+/*        MISO            */  /* -|                          |- */ /*  A6                    */
 /*        SCK             */  /* -|                          |- */ /*  A7                    */
 /*        RESET           */  /* -|                          |- */ /*        AREF            */
 /*        VCC             */  /* -|                          |- */ /*        GND             */
@@ -76,18 +77,13 @@ const char* COMMAND_MOTOR_DIRECTION				= "md";
 
 const char* COMMAND_STATUS_COLOR				= "sc";
 
-const char* COMMAND_SET_FRONT_HEADLIGHT_LEFT	= "sfhl";
-const char* COMMAND_SET_FRONT_HEADLIGHT_RIGHT	= "sfhr";
 const char* COMMAND_SET_FRONT_HEADLIGHT			= "sfh";
-const char* COMMAND_SET_REAR_LIGHT_LEFT			= "srll";
-const char* COMMAND_SET_REAR_LIGHT_RIGHT		= "srlr";
 const char* COMMAND_SET_REAR_LIGHT				= "srl";
 const char* COMMAND_SET_FRONT_FOGLIGHT_LEFT		= "sffl";
 const char* COMMAND_SET_FRONT_FOGLIGHT_RIGHT	= "sffr";
 const char* COMMAND_SET_FRONT_FOGLIGHT			= "sff";
-const char* COMMAND_SET_REVERSING_LIGHT_LEFT	= "srell";
-const char* COMMAND_SET_REVERSING_LIGHT_RIGHT	= "srelr";
 const char* COMMAND_SET_REVERSING_LIGHT			= "srel";
+const char* COMMAND_SET_BLINK_MODE				= "sblm";
 
 const char* COMMAND_FEAT1_MOTOR_SPEED 			= "fm1s";
 const char* COMMAND_FEAT1_MOTOR_DIRECTION		= "fm1d";
@@ -129,6 +125,7 @@ Motor s_mainMotor;
 TimeoutMotor s_featureMotor1;
 TimeoutMotor s_featureMotor2;
 RgbLed s_stateLed;
+Blink s_blink;
 
 Pin s_pinEmpty = { 0, 0, 0 };
 
@@ -160,6 +157,7 @@ ISR( TIMER0_OVF_vect )
 	increaseControllerTimeout(s_clock.tickDurationMs);
 	TimeoutMotor_tick(&s_featureMotor1);
 	TimeoutMotor_tick(&s_featureMotor2);
+	Blink_tick(&s_blink);
 }
 
 void initMotorTimer() {
@@ -195,16 +193,15 @@ void initStatusLed() {
 }
 
 void initLEDs() {
-	Pin_setMode(&PIN_LED_FRONT_H_L, PinMode_Output);
-	Pin_setMode(&PIN_LED_FRONT_H_R, PinMode_Output);
+	Pin_setMode(&PIN_LED_FRONT_H, PinMode_Output);
 	
-	Pin_setMode(&PIN_LED_REAR_L, PinMode_Output);
-	Pin_setMode(&PIN_LED_REAR_R, PinMode_Output);
+	Pin_setMode(&PIN_LED_REAR, PinMode_Output);
 	
 	Pin_setMode(&PIN_LED_FRONT_F_L, PinMode_Output);
 	Pin_setMode(&PIN_LED_FRONT_F_R, PinMode_Output);
-	Pin_setMode(&PIN_LED_REVERSE_L, PinMode_Output);
-	Pin_setMode(&PIN_LED_REVERSE_R, PinMode_Output);
+	Pin_setMode(&PIN_LED_REVERSE, PinMode_Output);
+
+	Blink_init(&s_blink, PIN_LED_BLINK_L, PIN_LED_BLINK_R, SERVO_TIMER_PERIOD_MS, 500);
 }
 
 void nextTestStep() {
@@ -237,31 +234,18 @@ uint8_t handleCommand(char* command, char* value) {
 		uint32_t color = strtoul(value, (char**)0, 0);
 		RgbLed_setColor(&s_stateLed, color);
 		result = 1;
-	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_LEFT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? PinValue_Low : PinValue_High);
-		result = 1; 
-	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT_RIGHT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? PinValue_Low : PinValue_High);
+	} else if(strcmp(command, COMMAND_SET_BLINK_MODE) == 0) {
+		int modeInt = atoi(value);
+		BlinkMode mode = (BlinkMode)modeInt;
+		Blink_setMode(&s_blink, mode);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_FRONT_H_L, on == 0 ? PinValue_Low : PinValue_High);
-		Pin_setValue(&PIN_LED_FRONT_H_R, on == 0 ? PinValue_Low : PinValue_High);
-		result = 1; 
-	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_LEFT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? PinValue_Low : PinValue_High);
-		result = 1; 
-	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT_RIGHT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_FRONT_H, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REAR_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REAR_L, on == 0 ? PinValue_Low : PinValue_High);
-		Pin_setValue(&PIN_LED_REAR_R, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_REAR, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_FOGLIGHT_LEFT) == 0) {
 		int on = atoi(value) != 0;
@@ -276,18 +260,9 @@ uint8_t handleCommand(char* command, char* value) {
 		Pin_setValue(&PIN_LED_FRONT_F_L, on == 0 ? PinValue_Low : PinValue_High);
 		Pin_setValue(&PIN_LED_FRONT_F_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
-	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_LEFT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? PinValue_Low : PinValue_High);
-		result = 1; 
-	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT_RIGHT) == 0) {
-		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? PinValue_Low : PinValue_High);
-		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_REVERSING_LIGHT) == 0) {
 		int on = atoi(value) != 0;
-		Pin_setValue(&PIN_LED_REVERSE_L, on == 0 ? PinValue_Low : PinValue_High);
-		Pin_setValue(&PIN_LED_REVERSE_R, on == 0 ? PinValue_Low : PinValue_High);
+		Pin_setValue(&PIN_LED_REVERSE, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_FEAT1_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);
@@ -436,6 +411,7 @@ void stopAll() {
 	TimeoutMotor_setDirection(&s_featureMotor2, 1);
 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 0);
 	TimeoutMotor_setRemaining(&s_featureMotor2, 0);	
+	Blink_setMode(&s_blink, BlinkMode_Off);
 }
 
 void handleControllerTimeout() {

@@ -69,11 +69,44 @@ public class CarHandler extends BluetoothGattCallback {
         }
     }
 
+    public enum BlinkMode {
+        Off(0),
+        Right(1),
+        Left(2),
+        Both(3);
+
+        private int mValue;
+
+        private BlinkMode(int value) {
+            mValue = value;
+        }
+
+        public int getValue() {
+            return mValue;
+        }
+
+        public static BlinkMode fromValue(int value) {
+            switch(value) {
+                case 0:
+                    return Off;
+                case 1:
+                    return Right;
+                case 2:
+                    return Left;
+                case 3:
+                    return Both;
+                default:
+                    return Off;
+            }
+        }
+    }
+
     public static final UUID UUID_SERVICE                               = UUID.fromString("40480f29-7bad-4ea5-8bf8-499405c9b324");
     private static final UUID UUID_CHARACTERISTIC_SPEED                 = UUID.fromString("8d8ba32b-96be-4590-910b-c756c5222c9f");
     private static final UUID UUID_CHARACTERISTIC_STEER                 = UUID.fromString("7baf8dca-2bfc-47fb-af29-042fccc180eb");
     private static final UUID UUID_CHARACTERISTIC_TRUNK                 = UUID.fromString("e0af3340-022e-47e1-a263-d68887dc41d4");
     private static final UUID UUID_CHARACTERISTIC_MOVABLE_FRONT_LIGHT   = UUID.fromString("fa10e4de-259e-4d23-9f59-45a9c66802ca");
+    private static final UUID UUID_CHARACTERISTIC_BLINK                 = UUID.fromString("aad03b81-f2ea-47db-ae1e-7c2f9e86e93e");
 
     private boolean mIsConnected;
     private boolean mShouldDisconnect;
@@ -94,6 +127,8 @@ public class CarHandler extends BluetoothGattCallback {
     private TrunkState mLastSentTrunkState;
     private MovableFrontLightState mMovableFrontLightState;
     private MovableFrontLightState mLastSentMovableFrontLightState;
+    private BlinkMode mBlinkMode;
+    private BlinkMode mLastSentBlinkMode;
     private Timer mSendTimer;
 
     public CarHandler(Context context, String carAddress) {
@@ -101,6 +136,7 @@ public class CarHandler extends BluetoothGattCallback {
         this.mSteering = 0;
         this.mTrunkState = this.mLastSentTrunkState = TrunkState.Unknown;
         this.mMovableFrontLightState = this.mLastSentMovableFrontLightState = MovableFrontLightState.Unknown;
+        this.mBlinkMode = this.mLastSentBlinkMode = BlinkMode.Off;
         mIsConnected = false;
         mShouldDisconnect = false;
         mCarAddress = carAddress;
@@ -141,13 +177,30 @@ public class CarHandler extends BluetoothGattCallback {
         transmitData();
     }
 
+    public TrunkState getTrunkState() {
+        return mTrunkState;
+    }
+
     public void setTrunkState(TrunkState trunkState) {
         mTrunkState = trunkState;
         transmitData();
     }
 
+    public MovableFrontLightState getMovableFrontLightState() {
+        return mMovableFrontLightState;
+    }
+
     public void setMovableFrontLightState(MovableFrontLightState mflState) {
         mMovableFrontLightState = mflState;
+        transmitData();
+    }
+
+    public BlinkMode getBlinkMode() {
+        return mBlinkMode;
+    }
+
+    public void setBlinkMode(BlinkMode blinkMode) {
+        mBlinkMode = blinkMode;
         transmitData();
     }
 
@@ -184,6 +237,14 @@ public class CarHandler extends BluetoothGattCallback {
         }
         BluetoothGattCharacteristic mflCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_MOVABLE_FRONT_LIGHT);
         return mflCharacteristic != null;
+    }
+
+    public boolean hasBlinkOption() {
+        if(!mIsConnected || mService == null) {
+            return false;
+        }
+        BluetoothGattCharacteristic blinkCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_BLINK);
+        return blinkCharacteristic != null;
     }
 
     private void onReadyStateChanged(boolean ready) {
@@ -236,6 +297,15 @@ public class CarHandler extends BluetoothGattCallback {
                 characteristicMFL.setValue(new byte[] { (byte)mMovableFrontLightState.getValue() });
                 if(mGatt.writeCharacteristic(characteristicMFL)) {
                     mLastSentMovableFrontLightState = mMovableFrontLightState;
+                } else {
+                    result = false;
+                }
+            }
+            if(hasBlinkOption() && mLastSentBlinkMode != mBlinkMode) {
+                BluetoothGattCharacteristic characteristicBlinkMode = mService.getCharacteristic(UUID_CHARACTERISTIC_BLINK);
+                characteristicBlinkMode.setValue(new byte[] { (byte)mBlinkMode.getValue() });
+                if(mGatt.writeCharacteristic(characteristicBlinkMode)) {
+                    mLastSentBlinkMode = mBlinkMode;
                 } else {
                     result = false;
                 }

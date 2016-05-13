@@ -27,6 +27,13 @@ enum class MovableFrontLightState {
   Active = 2
 };
 
+enum class BlinkMode {
+  Off   = 0,
+  Right = 1,
+  Left  = 2,
+  Both  = 3,
+};
+
 class LegoCarModel {
 public:
   LegoCarModel();
@@ -50,6 +57,9 @@ public:
   MovableFrontLightState getMovableFrontLightState();
   void setMovableFrontLightState(MovableFrontLightState mflState);
 
+  BlinkMode getBlinkMode();
+  void setBlinkMode(BlinkMode blinkMode);
+
   void stopAll();
 private:
   int8_t m_speedPercent;
@@ -58,6 +68,7 @@ private:
   CarState m_carState;
   TrunkState m_trunkState;
   MovableFrontLightState m_mflState;
+  BlinkMode m_blinkMode;
 
   uint32_t getStateColor();
   void sendLightState();

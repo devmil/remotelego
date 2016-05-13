@@ -129,6 +129,36 @@ private:
   LegoCarModel& m_model;
 };
 
+class BlinkCharacteristic : public BluetoothCharacteristic {
+public:
+    BlinkCharacteristic(LegoCarModel& model) 
+    : BluetoothCharacteristic(std::string("aad03b81-f2ea-47db-ae1e-7c2f9e86e93e")),
+      m_model(model) {
+    }
+    virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+    }
+    virtual uint16_t getDataSize() {
+      return 1;
+    }
+protected:
+    virtual std::vector<uint8_t> onRead() {
+      std::vector<uint8_t> result;
+      result.push_back((uint8_t)m_model.getBlinkMode());
+      return result;
+    }
+    virtual void onWrite(std::vector<uint8_t> data) {
+      if(data.size() != 1) {
+        Serial.println("Invalid blink state received!");
+        return;
+      }
+      int8_t blinkMode = data[0]; //range = 0 - 3
+      m_model.setBlinkMode((BlinkMode)blinkMode);
+    }
+private:
+  LegoCarModel& m_model;
+};
+
 class LegoCarService : public BluetoothService {
 public:
   LegoCarService(LegoCarModel& model) 
@@ -137,6 +167,7 @@ public:
     addCharacteristic(std::make_shared<SteerCharacteristic>(model));
     addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
     addCharacteristic(std::make_shared<MovableFrontLightCharacteristic>(model));
+    addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
   }
 };
 

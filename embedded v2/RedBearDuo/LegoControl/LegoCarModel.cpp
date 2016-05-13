@@ -8,6 +8,7 @@ LegoCarModel::LegoCarModel() {
   m_lightState = LightState::Normal;
   m_trunkState = TrunkState::Unknown;
   m_mflState = MovableFrontLightState::Unknown;
+  m_lightState = LightState::FogLight;
 }
 
 LegoCarModel::~LegoCarModel() {
@@ -63,6 +64,7 @@ CarState LegoCarModel::getCarState() {
 void LegoCarModel::setCarState(CarState state) {
   m_carState = state;
   AVRProtocol::send(AVRCommandFactory::createStatusColorCommand(getStateColor()));
+  sendLightState();
 }
 
 void LegoCarModel::stopAll() {
@@ -89,18 +91,20 @@ void LegoCarModel::sendLightState() {
   bool ledsFogOn = false;
   bool ledsReverseOn = false;
 
-  ledsReverseOn = m_speedPercent < 0;
-  if(m_lightState != LightState::Off) {
-      ledsFrontOn = true;
-      ledsBackOn = true;
-      ledsFogOn = m_lightState == LightState::FogLight;
+  if(m_carState == CarState::ClientConnected) {
+    ledsReverseOn = m_speedPercent < 0;
+    if(m_lightState != LightState::Off) {
+        ledsFrontOn = true;
+        ledsBackOn = true;
+        ledsFogOn = m_lightState == LightState::FogLight;
+    }    
   }
 
   std::vector<AVRCommandData> commands;
-  commands.push_back(AVRCommandFactory::createFrontHeadlightCommand(Position::Both, ledsFrontOn));
-  commands.push_back(AVRCommandFactory::createRearLightCommand(Position::Both, ledsBackOn));
+  commands.push_back(AVRCommandFactory::createFrontHeadlightCommand(ledsFrontOn));
+  commands.push_back(AVRCommandFactory::createRearLightCommand(ledsBackOn));
   commands.push_back(AVRCommandFactory::createFrontFoglightCommand(Position::Both, ledsFogOn));
-  commands.push_back(AVRCommandFactory::createReversingLightCommand(Position::Both, ledsReverseOn));
+  commands.push_back(AVRCommandFactory::createReversingLightCommand(ledsReverseOn));
 
   AVRProtocol::send(commands);
 }
@@ -166,4 +170,21 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
 
   AVRProtocol::send(commands);
 }
+
+BlinkMode LegoCarModel::getBlinkMode() {
+  return m_blinkMode;
+}
+  
+void LegoCarModel::setBlinkMode(BlinkMode blinkMode) {
+  if(m_blinkMode == blinkMode) {
+    return;
+  }
+  m_blinkMode = blinkMode;
+
+  std::vector<AVRCommandData> commands;
+  commands.push_back(AVRCommandFactory::createBlinkModeCommand((uint8_t)m_blinkMode));
+
+  AVRProtocol::send(commands);
+}
+
 

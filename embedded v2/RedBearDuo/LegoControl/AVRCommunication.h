@@ -29,10 +29,11 @@ public:
   static AVRCommandData createServoAngleCommand(float angle);
   static AVRCommandData createStatusColorCommand(uint32_t color);
   
-  static AVRCommandData createFrontHeadlightCommand(Position pos, bool on);
-  static AVRCommandData createRearLightCommand(Position pos, bool on);
+  static AVRCommandData createFrontHeadlightCommand(bool on);
+  static AVRCommandData createRearLightCommand(bool on);
   static AVRCommandData createFrontFoglightCommand(Position pos, bool on);
-  static AVRCommandData createReversingLightCommand(Position pos, bool on);
+  static AVRCommandData createReversingLightCommand(bool on);
+  static AVRCommandData createBlinkModeCommand(uint8_t mode);
   
   static AVRCommandData createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent);
   static AVRCommandData createFeatureMotorDirectionCommand(uint8_t featureNumber, uint8_t direction);

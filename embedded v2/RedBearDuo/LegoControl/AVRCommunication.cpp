@@ -18,22 +18,26 @@ AVRCommandData AVRCommandFactory::createStatusColorCommand(uint32_t color) {
   return AVRCommandData("sc", String("0x") + String(color, HEX));  
 }
 
-AVRCommandData AVRCommandFactory::createFrontHeadlightCommand(Position pos, bool on) {
-  return AVRCommandData("sfh" + getPositionIdentifier(pos), on ? "1" : "0");
+AVRCommandData AVRCommandFactory::createFrontHeadlightCommand(bool on) {
+  return AVRCommandData("sfh", on ? "1" : "0");
 }
 
-AVRCommandData AVRCommandFactory::createRearLightCommand(Position pos, bool on) {
-  return AVRCommandData("srl" + getPositionIdentifier(pos), on ? "1" : "0");
+AVRCommandData AVRCommandFactory::createRearLightCommand(bool on) {
+  return AVRCommandData("srl", on ? "1" : "0");
 }
 
 AVRCommandData AVRCommandFactory::createFrontFoglightCommand(Position pos, bool on) {
   return AVRCommandData("sff" + getPositionIdentifier(pos), on ? "1" : "0");
 }
 
-AVRCommandData AVRCommandFactory::createReversingLightCommand(Position pos, bool on) {
-  return AVRCommandData("srel" + getPositionIdentifier(pos), on ? "1" : "0");
+AVRCommandData AVRCommandFactory::createReversingLightCommand(bool on) {
+  return AVRCommandData("srel", on ? "1" : "0");
 }
 
+AVRCommandData AVRCommandFactory::createBlinkModeCommand(uint8_t mode) {
+  return AVRCommandData("sblm", String(mode, DEC));
+}
+  
 AVRCommandData AVRCommandFactory::createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent) {
   return AVRCommandData("fm" + String(featureNumber, DEC) + "s", String(speedPercent, DEC));
 }
