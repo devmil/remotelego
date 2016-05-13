@@ -149,10 +149,10 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
   uint8_t featureNumber = 2;
   uint8_t direction = 0;
   uint8_t speedPercent = 0;
-  uint8_t timeoutSeconds = 0;
+  uint16_t timeoutMilliseconds = 0;
 
-  speedPercent = 70;
-  timeoutSeconds = 3;
+  speedPercent = 100;
+  timeoutMilliseconds = 1500;
   if(m_mflState == MovableFrontLightState::Hidden) {
     direction = 0;
   } else if(m_mflState == MovableFrontLightState::Active) {
@@ -162,7 +162,7 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
   std::vector<AVRCommandData> commands;
   commands.push_back(AVRCommandFactory::createFeatureMotorSpeedCommand(featureNumber, speedPercent));
   commands.push_back(AVRCommandFactory::createFeatureMotorDirectionCommand(featureNumber, direction));
-  commands.push_back(AVRCommandFactory::createFeatureMotorTimeoutCommand(featureNumber, timeoutSeconds));
+  commands.push_back(AVRCommandFactory::createFeatureMotorTimeoutMillisecondsCommand(featureNumber, timeoutMilliseconds));
 
   AVRProtocol::send(commands);
 }

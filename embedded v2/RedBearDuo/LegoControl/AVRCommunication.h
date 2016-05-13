@@ -37,6 +37,7 @@ public:
   static AVRCommandData createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent);
   static AVRCommandData createFeatureMotorDirectionCommand(uint8_t featureNumber, uint8_t direction);
   static AVRCommandData createFeatureMotorTimeoutCommand(uint8_t featureNumber, uint8_t timeoutSeconds);
+  static AVRCommandData createFeatureMotorTimeoutMillisecondsCommand(uint8_t featureNumber, uint16_t timeoutMilliseconds);
 private:
   static String getPositionIdentifier(Position pos);
 };

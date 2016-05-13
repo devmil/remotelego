@@ -46,6 +46,10 @@ AVRCommandData AVRCommandFactory::createFeatureMotorTimeoutCommand(uint8_t featu
   return AVRCommandData("fm" + String(featureNumber, DEC) + "ts", String(timeoutSeconds, DEC));
 }
 
+AVRCommandData AVRCommandFactory::createFeatureMotorTimeoutMillisecondsCommand(uint8_t featureNumber, uint16_t timeoutMilliseconds) {
+  return AVRCommandData("fm" + String(featureNumber, DEC) + "tms", String(timeoutMilliseconds, DEC));
+}
+
 String AVRCommandFactory::getPositionIdentifier(Position pos) {
   switch(pos) {
     case Position::Left:
