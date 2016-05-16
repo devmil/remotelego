@@ -4,16 +4,16 @@ static uint8_t  BLE_appearance[2]    = {0x00, 0x02};
 static uint8_t  BLE_change[2]        = {0x00, 0x00};
 static uint8_t  BLE_conn_param[8]    = {0x28, 0x00, 0x90, 0x01, 0x00, 0x00, 0x90, 0x01};
 
-void addUUIDStringToByteVector(std::string uuid, std::vector<uint8_t>& target) {
+void addUUIDStringToByteVector(String uuid, std::vector<uint8_t>& target) {
   bool highByte = true;
-  std::string hexVal;
-  for(auto c : uuid) {
-      if(c != '-') {
+  String hexVal;
+  for(uint16_t i=0; i<uuid.length(); i++) {
+      if(uuid.charAt(i) != '-') {
           if(highByte) {
-            hexVal = c;
+            hexVal = uuid.charAt(i);
             highByte = false;
           } else {
-            hexVal = hexVal + c;
+            hexVal = hexVal + uuid.charAt(i);
             highByte = true;
             uint8_t byteVal = strtoul(hexVal.c_str(), 0, 16);
             target.push_back(byteVal);
@@ -22,7 +22,7 @@ void addUUIDStringToByteVector(std::string uuid, std::vector<uint8_t>& target) {
   }
 }
 
-BluetoothCharacteristic::BluetoothCharacteristic(std::string uuid)
+BluetoothCharacteristic::BluetoothCharacteristic(String uuid)
 : m_uuid(uuid),
   m_uuidBytes() {
     addUUIDStringToByteVector(uuid, m_uuidBytes);
@@ -55,7 +55,7 @@ std::vector<uint8_t> BluetoothCharacteristic::read() {
     return result;
 }
 
-BluetoothService::BluetoothService(std::string uuid)
+BluetoothService::BluetoothService(String uuid)
 : m_uuid(uuid),
   m_uuidBytes(),
   m_characteristics(),
@@ -117,7 +117,7 @@ Bluetooth::~Bluetooth() {
     
 }
 
-void Bluetooth::init(std::string deviceName) {
+void Bluetooth::init(String deviceName) {
   getInstance()->init_internal(deviceName);
 }
 
@@ -137,11 +137,11 @@ void Bluetooth::advertiseServices() {
   getInstance()->advertiseServices_internal();
 }
 
-void Bluetooth::advertiseEddystoneUrl(std::string url) {
+void Bluetooth::advertiseEddystoneUrl(String url) {
   getInstance()->advertiseEddystoneUrl_internal(url);
 }
 
-void Bluetooth::init_internal(std::string deviceName) {
+void Bluetooth::init_internal(String deviceName) {
   m_deviceName = deviceName;
   ble.init();
   ble.onConnectedCallback(onDeviceConnectedCallback);
@@ -203,7 +203,7 @@ void Bluetooth::advertiseServices_internal() {
   ble.startAdvertising();
 }
 
-void Bluetooth::advertiseEddystoneUrl_internal(std::string url) {
+void Bluetooth::advertiseEddystoneUrl_internal(String url) {
   ble.setAdvParams(&m_advParamsEddystone);
 
   initServiceAdvertisingData(m_deviceName);
@@ -218,7 +218,7 @@ Bluetooth::Ptr Bluetooth::getInstance() {
   return instance;
 }
 
-void Bluetooth::initServiceAdvertisingData(std::string deviceName) {
+void Bluetooth::initServiceAdvertisingData(String deviceName) {
   //Type=1, data=0x06
   addAdvertisingDataByte(m_advDataServices, 0x01, 0x06);
   //Type=8, Device name
@@ -229,7 +229,7 @@ void Bluetooth::initServiceAdvertisingData(std::string deviceName) {
   }
 }
 
-void Bluetooth::initEddystoneAdvertisingData(std::string eddystoneUrl) {
+void Bluetooth::initEddystoneAdvertisingData(String eddystoneUrl) {
   //Type=1, data=0x06
   addAdvertisingDataByte(m_advDataEddystone, 0x01, 0x06);
   std::vector<uint8_t> eddystoneHeaderData = { 0xAA, 0xFE };
@@ -243,10 +243,10 @@ void Bluetooth::addAdvertisingDataByte(std::vector<uint8_t>& target, uint8_t typ
   addAdvertisingData(target, type, data);
 }
 
-void Bluetooth::addAdvertisingDataString(std::vector<uint8_t>& target, uint8_t type, std::string str) {
+void Bluetooth::addAdvertisingDataString(std::vector<uint8_t>& target, uint8_t type, String str) {
   std::vector<uint8_t> data;
-  for(auto c : str) {
-    data.push_back(static_cast<uint8_t>(c));
+  for(uint16_t i=0; i<str.length(); i++) {
+    data.push_back(static_cast<uint8_t>(str.charAt(i)));
   }
   addAdvertisingData(target, type, data);
 }
@@ -259,7 +259,7 @@ void Bluetooth::addAdvertisingDataInverted(std::vector<uint8_t>& target, uint8_t
   addAdvertisingData(target, type, inverted);
 }
 
-void Bluetooth::addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_t type,  std::string url) {
+void Bluetooth::addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_t type,  String url) {
   std::vector<uint8_t> data;
   data.push_back(0xAA); //Eddystone ID 1
   data.push_back(0xFE); //Eddystone ID 2
@@ -269,9 +269,9 @@ void Bluetooth::addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_
 
   //TODO: detect http and remove
 
-  for(auto c : url) {
+  for(uint16_t i=0; i<url.length(); i++) {
     if(data.size() <= 30) {
-      data.push_back(static_cast<uint8_t>(c));
+      data.push_back(static_cast<uint8_t>(url.charAt(i)));
     }
   }
 
@@ -311,18 +311,19 @@ void Bluetooth::onDeviceDisconnected(uint16_t handle) {
   }    
 }
 
-uint16_t Bluetooth::onDataRead(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size) {
-    for(auto service : m_services) {
-        if(service->hasCharacteristic(value_handle)) {
-            auto characteristic = service->getCharacteristic(value_handle);
-            std::vector<uint8_t> data = characteristic->read();
-            for(unsigned int i=0; i<data.size(); i++) {
-                if(i < buffer_size - 1) {
-                    buffer[i] = data[i];
-                }
-            }
-        }
+uint16_t Bluetooth::onDataRead(uint16_t value_handle, uint8_t * buffer) {
+  uint16_t bytesRead = 0;
+  for(auto service : m_services) {
+    if(service->hasCharacteristic(value_handle)) {
+      auto characteristic = service->getCharacteristic(value_handle);
+      std::vector<uint8_t> data = characteristic->read();
+      for(unsigned int i=0; i<data.size(); i++) {
+        buffer[i] = data[i];
+        bytesRead++;
+      }
     }
+  }
+  return bytesRead;
 }
 
 int Bluetooth::onDataWrite(uint16_t value_handle, uint8_t *buffer, uint16_t size) {
@@ -347,8 +348,9 @@ void Bluetooth::onDeviceDisconnectedCallback(uint16_t handle) {
     getInstance()->onDeviceDisconnected(handle);
 }
 
-uint16_t Bluetooth::onDataReadCallback(uint16_t value_handle, uint8_t * buffer, uint16_t buffer_size) {
-    return getInstance()->onDataRead(value_handle, buffer, buffer_size);
+uint16_t Bluetooth::onDataReadCallback(uint16_t value_handle, uint8_t * buffer, uint16_t) {
+  auto result = getInstance()->onDataRead(value_handle, buffer);
+  return result;
 }
 
 int Bluetooth::onDataWriteCallback(uint16_t value_handle, uint8_t *buffer, uint16_t size) {

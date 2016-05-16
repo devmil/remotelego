@@ -155,8 +155,8 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
   uint8_t speedPercent = 0;
   uint16_t timeoutMilliseconds = 0;
 
-  speedPercent = 100;
-  timeoutMilliseconds = 1500;
+  speedPercent = 80;
+  timeoutMilliseconds = 2500;
   if(m_mflState == MovableFrontLightState::Hidden) {
     direction = 0;
   } else if(m_mflState == MovableFrontLightState::Active) {

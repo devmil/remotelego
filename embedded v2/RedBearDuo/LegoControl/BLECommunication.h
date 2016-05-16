@@ -12,7 +12,7 @@
 class SpeedCharacteristic : public BluetoothCharacteristic {
 public:
     SpeedCharacteristic(LegoCarModel& model) 
-    : BluetoothCharacteristic(std::string("8d8ba32b-96be-4590-910b-c756c5222c9f")),
+    : BluetoothCharacteristic(String("8d8ba32b-96be-4590-910b-c756c5222c9f")),
       m_model(model){
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -42,7 +42,7 @@ private:
 class SteerCharacteristic : public BluetoothCharacteristic {
 public:
     SteerCharacteristic(LegoCarModel& model) 
-    : BluetoothCharacteristic(std::string("7baf8dca-2bfc-47fb-af29-042fccc180eb")),
+    : BluetoothCharacteristic(String("7baf8dca-2bfc-47fb-af29-042fccc180eb")),
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -72,7 +72,7 @@ private:
 class TrunkCharacteristic : public BluetoothCharacteristic {
 public:
     TrunkCharacteristic(LegoCarModel& model) 
-    : BluetoothCharacteristic(std::string("e0af3340-022e-47e1-a263-d68887dc41d4")),
+    : BluetoothCharacteristic(String("e0af3340-022e-47e1-a263-d68887dc41d4")),
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -102,7 +102,7 @@ private:
 class MovableFrontLightCharacteristic : public BluetoothCharacteristic {
 public:
     MovableFrontLightCharacteristic(LegoCarModel& model) 
-    : BluetoothCharacteristic(std::string("fa10e4de-259e-4d23-9f59-45a9c66802ca")),
+    : BluetoothCharacteristic(String("fa10e4de-259e-4d23-9f59-45a9c66802ca")),
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -132,7 +132,7 @@ private:
 class BlinkCharacteristic : public BluetoothCharacteristic {
 public:
     BlinkCharacteristic(LegoCarModel& model) 
-    : BluetoothCharacteristic(std::string("aad03b81-f2ea-47db-ae1e-7c2f9e86e93e")),
+    : BluetoothCharacteristic(String("aad03b81-f2ea-47db-ae1e-7c2f9e86e93e")),
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -162,7 +162,7 @@ private:
 class LegoCarService : public BluetoothService {
 public:
   LegoCarService(LegoCarModel& model) 
-  : BluetoothService(std::string("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
+  : BluetoothService(String("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
     addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
     addCharacteristic(std::make_shared<SteerCharacteristic>(model));
     addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
