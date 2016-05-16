@@ -1,0 +1,83 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=Mainboard
+*Date=22:52:57
+*CreatedBy=Fritzing 0.9.2b.11.19.8d2d5970658f0bed09c661c9ea9a515b5f40f44c
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;8.10335;-24.3643;0;Bottom;Via6
+2;;cap-pth-small2;39.557;-23.8555;180;Bottom;Capacitor
+3;;;50.9869;-12.6522;0;Bottom;Via25
+4;;THT;19.237;-46.0248;-90;Bottom;RGB
+5;;;58.5505;-38.8987;0;Bottom;Via15
+6;;THT;39.557;-43.4848;-90;Bottom;LEDs
+7;;;49.5758;-5.03216;0;Bottom;Via34
+8;220;0402 [SMD];38.3382;-41.1015;90;Bottom;R9
+9;;THT;52.257;-2.84484;-90;Bottom;Feature Motors
+10;;THT;66.0859;-46.5893;0;Bottom;GND
+11;220;0402 [SMD];53.5782;-41.1015;90;Bottom;R13
+12;;;51.89;-32.0266;0;Bottom;Via13
+13;;pdpi;39.557;-29.0342;-90;Bottom;Atmega32
+14;;THT;45.9071;-28.3348;90;Bottom;XTAL
+15;;;68.7105;-30.164;0;Bottom;Via19
+16;;;10.347;-20.6249;0;Bottom;Via2
+17;220;0402 [SMD];33.2582;-41.1015;90;Bottom;R7
+18;;;6.50879;-25.7613;0;Bottom;Via5
+19;;;4.64612;-43.0333;0;Bottom;Via12
+20;;;62.8403;-10.0416;0;Bottom;Via20
+21;;;9.42979;-27.5111;0;Bottom;Via7
+22;;THT;62.417;-43.2732;-90;Bottom;Control board
+23;;;18.0799;-29.5431;0;Bottom;Via16
+24;;;49.5758;-6.79605;0;Bottom;Via33
+25;220;0402 [SMD];15.478;-43.6415;90;Bottom;R1
+26;220;0402 [SMD];43.4182;-41.1015;90;Bottom;R11
+27;220;0402 [SMD];20.5579;-43.6415;90;Bottom;R2
+28;;;67.2147;-14.9805;0;Bottom;Via23
+29;;THT;2.72703;-35.8648;0;Bottom;J19
+30;220;0402 [SMD];48.4982;-41.1015;90;Bottom;R15
+31;;;16.3866;-30.9542;0;Bottom;Via17
+32;;THT;2.72703;-18.0848;180;Bottom;Servo
+33;220;0402 [SMD];51.0382;-41.1015;90;Bottom;R14
+34;;THT;52.257;-18.0848;-90;Bottom;J6
+35;;;67.638;-31.2364;0;Bottom;Via18
+36;;THT;39.557;-46.0248;90;Bottom;J14
+37;220;0402 [SMD];45.9582;-41.1015;90;Bottom;R12
+38;220;0402 [SMD];25.6382;-41.1015;90;Bottom;R4
+39;;;64.2514;-34.4537;0;Bottom;Via14
+40;;THT;13.0281;-2.28039;0;Bottom;VDD
+41;;;50.3096;-33.3249;0;Bottom;Via1
+42;;;66.0858;-16.1799;0;Bottom;Via22
+43;;THT;6.53703;-46.8715;0;Bottom;VM
+44;;;27.0686;-12.2288;0;Bottom;Via26
+45;;THT;31.937;-2.84484;90;Bottom;Main Motor
+46;;THT;3.99703;-10.4648;90;Bottom;Main
+47;;THT;3.99703;-7.92484;90;Bottom;Feat2
+48;;THT;64.3926;-2.91539;0;Bottom;GND
+49;;;7.99046;-29.1621;0;Bottom;Via11
+50;;;64.9569;-11.3822;0;Bottom;Via21
+51;;;30.6669;-10.606;0;Bottom;Via27
+52;;THT;31.937;-15.5448;90;Bottom;J3
+53;;cap-pth-small2;39.557;-34.0155;0;Bottom;Capacitor
+54;220;0402 [SMD];28.1782;-41.1015;90;Bottom;R5
+55;;;6.45235;-27.624;0;Bottom;Via10
+56;220;0402 [SMD];30.7182;-41.1015;90;Bottom;R6
+57;;THT;16.697;-15.5448;-90;Bottom;5v Step
+58;;;20.4364;-1.08105;0;Bottom;Via3
+59;;;18.3903;-6.72549;0;Bottom;Via32
+60;220;0402 [SMD];23.0979;-43.6415;90;Bottom;R3
+61;;;68.3436;-13.781;0;Bottom;Via24
+62;;THT;3.99703;-5.38484;90;Bottom;Feat1
+63;220;0402 [SMD];40.8782;-41.1015;90;Bottom;R10
+64;;THT;5.26703;-35.8648;0;Bottom;Flash
+65;;;42.1816;-32.1395;0;Bottom;Via4
+66;220;0402 [SMD];35.7982;-41.1015;90;Bottom;R8
+67;;;10.855;-22.9955;0;Bottom;Via8
+68;;THT;2.72703;-24.4348;0;Bottom;Power
