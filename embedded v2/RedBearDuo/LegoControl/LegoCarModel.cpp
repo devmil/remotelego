@@ -70,6 +70,15 @@ void LegoCarModel::setCarState(CarState state) {
 void LegoCarModel::stopAll() {
   setSteeringDegrees(0);
   setMotorSpeedPercent(0);
+  m_blinkControl.setMode(BlinkMode::Off);
+}
+
+void LegoCarModel::loop() {
+  m_blinkControl.loop();
+}
+
+void LegoCarModel::init() {
+  m_blinkControl.init();
 }
 
 uint32_t LegoCarModel::getStateColor() {
@@ -172,19 +181,11 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
 }
 
 BlinkMode LegoCarModel::getBlinkMode() {
-  return m_blinkMode;
+  return m_blinkControl.getMode();
 }
   
 void LegoCarModel::setBlinkMode(BlinkMode blinkMode) {
-  if(m_blinkMode == blinkMode) {
-    return;
-  }
-  m_blinkMode = blinkMode;
-
-  std::vector<AVRCommandData> commands;
-  commands.push_back(AVRCommandFactory::createBlinkModeCommand((uint8_t)m_blinkMode));
-
-  AVRProtocol::send(commands);
+  m_blinkControl.setMode(blinkMode);
 }
 
 

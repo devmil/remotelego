@@ -10,7 +10,6 @@
 #include "pin.h"
 #include "led.h"
 #include "motor.h"
-#include "blink.h"
 
 //For B0: BIT(B,0)
 #define BIT(p,b)                (P##p##b)
@@ -83,7 +82,8 @@ const char* COMMAND_SET_FRONT_FOGLIGHT_LEFT		= "sffl";
 const char* COMMAND_SET_FRONT_FOGLIGHT_RIGHT	= "sffr";
 const char* COMMAND_SET_FRONT_FOGLIGHT			= "sff";
 const char* COMMAND_SET_REVERSING_LIGHT			= "srel";
-const char* COMMAND_SET_BLINK_MODE				= "sblm";
+const char* COMMAND_SET_BLINK_LIGHT_LEFT		= "sblll";
+const char* COMMAND_SET_BLINK_LIGHT_RIGHT		= "sbllr";
 
 const char* COMMAND_FEAT1_MOTOR_SPEED 			= "fm1s";
 const char* COMMAND_FEAT1_MOTOR_DIRECTION		= "fm1d";
@@ -125,7 +125,6 @@ Motor s_mainMotor;
 TimeoutMotor s_featureMotor1;
 TimeoutMotor s_featureMotor2;
 RgbLed s_stateLed;
-Blink s_blink;
 
 Pin s_pinEmpty = { 0, 0, 0 };
 
@@ -157,7 +156,6 @@ ISR( TIMER0_OVF_vect )
 	increaseControllerTimeout(s_clock.tickDurationMs);
 	TimeoutMotor_tick(&s_featureMotor1);
 	TimeoutMotor_tick(&s_featureMotor2);
-	Blink_tick(&s_blink);
 }
 
 void initMotorTimer() {
@@ -201,7 +199,8 @@ void initLEDs() {
 	Pin_setMode(&PIN_LED_FRONT_F_R, PinMode_Output);
 	Pin_setMode(&PIN_LED_REVERSE, PinMode_Output);
 
-	Blink_init(&s_blink, PIN_LED_BLINK_L, PIN_LED_BLINK_R, SERVO_TIMER_PERIOD_MS, 500);
+	Pin_setMode(&PIN_LED_BLINK_L, PinMode_Output);
+	Pin_setMode(&PIN_LED_BLINK_R, PinMode_Output);
 }
 
 void nextTestStep() {
@@ -233,11 +232,14 @@ uint8_t handleCommand(char* command, char* value) {
 	} else if(strcmp(command, COMMAND_STATUS_COLOR) == 0) {
 		uint32_t color = strtoul(value, (char**)0, 0);
 		RgbLed_setColor(&s_stateLed, color);
-		result = 1;
-	} else if(strcmp(command, COMMAND_SET_BLINK_MODE) == 0) {
-		int modeInt = atoi(value);
-		BlinkMode mode = (BlinkMode)modeInt;
-		Blink_setMode(&s_blink, mode);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_BLINK_LIGHT_LEFT) == 0) {
+		uint8_t on = atoi(value) != 0;
+		Pin_setValue(&PIN_LED_BLINK_L, on == 0 ? PinValue_Low : PinValue_High);
+		result = 1; 
+	} else if(strcmp(command, COMMAND_SET_BLINK_LIGHT_RIGHT) == 0) {
+		uint8_t on = atoi(value) != 0;
+		Pin_setValue(&PIN_LED_BLINK_R, on == 0 ? PinValue_Low : PinValue_High);
 		result = 1; 
 	} else if(strcmp(command, COMMAND_SET_FRONT_HEADLIGHT) == 0) {
 		int on = atoi(value) != 0;
@@ -411,7 +413,6 @@ void stopAll() {
 	TimeoutMotor_setDirection(&s_featureMotor2, 1);
 	TimeoutMotor_setSpeedPercent(&s_featureMotor2, 0);
 	TimeoutMotor_setRemaining(&s_featureMotor2, 0);	
-	Blink_setMode(&s_blink, BlinkMode_Off);
 }
 
 void handleControllerTimeout() {

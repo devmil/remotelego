@@ -2,6 +2,7 @@
 #define LEGOCONTROL_LEGOCARMODEL_H_
 
 #include "Arduino.h"
+#include "BlinkControl.hpp"
 
 enum class LightState {
   Off = 0,
@@ -25,13 +26,6 @@ enum class MovableFrontLightState {
   Unknown = 0,
   Hidden = 1,
   Active = 2
-};
-
-enum class BlinkMode {
-  Off   = 0,
-  Right = 1,
-  Left  = 2,
-  Both  = 3,
 };
 
 class LegoCarModel {
@@ -61,6 +55,10 @@ public:
   void setBlinkMode(BlinkMode blinkMode);
 
   void stopAll();
+
+  void loop();
+
+  void init();
 private:
   int8_t m_speedPercent;
   int8_t m_steeringDegrees;
@@ -68,7 +66,7 @@ private:
   CarState m_carState;
   TrunkState m_trunkState;
   MovableFrontLightState m_mflState;
-  BlinkMode m_blinkMode;
+  BlinkControl m_blinkControl;
 
   uint32_t getStateColor();
   void sendLightState();

@@ -33,7 +33,8 @@ public:
   static AVRCommandData createRearLightCommand(bool on);
   static AVRCommandData createFrontFoglightCommand(Position pos, bool on);
   static AVRCommandData createReversingLightCommand(bool on);
-  static AVRCommandData createBlinkModeCommand(uint8_t mode);
+  static AVRCommandData createBlinkLightLeftCommand(bool on);
+  static AVRCommandData createBlinkLightRightCommand(bool on);
   
   static AVRCommandData createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent);
   static AVRCommandData createFeatureMotorDirectionCommand(uint8_t featureNumber, uint8_t direction);

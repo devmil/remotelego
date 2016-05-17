@@ -34,8 +34,12 @@ AVRCommandData AVRCommandFactory::createReversingLightCommand(bool on) {
   return AVRCommandData("srel", on ? "1" : "0");
 }
 
-AVRCommandData AVRCommandFactory::createBlinkModeCommand(uint8_t mode) {
-  return AVRCommandData("sblm", String(mode, DEC));
+AVRCommandData AVRCommandFactory::createBlinkLightLeftCommand(bool on) {
+  return AVRCommandData("sblll", on ? "1" : "0");
+}
+
+AVRCommandData AVRCommandFactory::createBlinkLightRightCommand(bool on) {
+  return AVRCommandData("sbllr", on ? "1" : "0");  
 }
   
 AVRCommandData AVRCommandFactory::createFeatureMotorSpeedCommand(uint8_t featureNumber, uint8_t speedPercent) {
