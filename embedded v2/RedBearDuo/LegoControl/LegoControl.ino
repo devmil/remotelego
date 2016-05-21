@@ -43,7 +43,6 @@ void loop() {
     }
   
     s_state++;
-    BLENano::ensureEddystoneUrl("https://www.devmil.de");
     s_lastLowFrequencyActionMillis = currentMillis;
   }
 

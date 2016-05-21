@@ -1,6 +1,9 @@
 #include "LegoCarModel.hpp"
 
 #include "AVRCommunication.h"
+#include "NANOCommunication.h"
+
+const String EDDYSTONE_URL = "https://www.devmil.de";
 
 LegoCarModel::LegoCarModel() {
   m_speedPercent = 0;
@@ -75,10 +78,16 @@ void LegoCarModel::stopAll() {
 
 void LegoCarModel::loop() {
   m_blinkControl.loop();
+  if(m_carState == CarState::Ready) {
+    BLENano::ensureEddystoneUrl(EDDYSTONE_URL);
+  } else {
+    BLENano::ensureEddystoneUrl("");
+  }
 }
 
 void LegoCarModel::init() {
   m_blinkControl.init();
+  BLENano::init();
 }
 
 uint32_t LegoCarModel::getStateColor() {
@@ -187,5 +196,3 @@ BlinkMode LegoCarModel::getBlinkMode() {
 void LegoCarModel::setBlinkMode(BlinkMode blinkMode) {
   m_blinkControl.setMode(blinkMode);
 }
-
-

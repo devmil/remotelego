@@ -70,6 +70,7 @@ private:
 
   uint32_t getStateColor();
   void sendLightState();
+
 };
 
 #endif

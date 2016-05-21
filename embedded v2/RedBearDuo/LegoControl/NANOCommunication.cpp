@@ -18,7 +18,7 @@ void BLENano::ensureEddystoneUrl(String url) {
   }
 }
 
-String BLENano::s_lastUrlSentSuccessfully = String("");
+String BLENano::s_lastUrlSentSuccessfully = "";
 
 bool BLENano::sendEddystoneUrl(String url) {
   //clear serial receive buffer
