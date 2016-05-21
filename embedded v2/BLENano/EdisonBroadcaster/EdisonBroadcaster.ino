@@ -51,13 +51,26 @@ bool advertiseEddystone(String url) {
     uint8_t flag = SCHEME_MAPPINGS[i].flag;
     if(url.startsWith(scheme)) {
       urlSchema = flag;
-      url = url.substring(scheme.length(), url.length());
+      if(scheme.length() == url.length()) {
+        url = "";
+      } else {
+        url = url.substring(scheme.length(), url.length());
+      }
       //Serial.println(String("Scheme found: ") + scheme + ", setting flag to: " + String(urlSchema, HEX) + String(", Rest of the URL = ") + url);
       break;
     }
   }
-  
-  ble.stopAdvertising();
+
+  ble.gap().stopAdvertising();
+  ble.gap().clearAdvertisingPayload();
+  ble.gap().clearScanResponse();
+
+  //Serial.println("Advertising URL: " + url);
+
+  if(String("").equals(url)) {
+    //Serial.println("Detected empty URL!");
+    return true;
+  }
 
   uint8_t serviceDataIndex = 0;
 
@@ -70,7 +83,7 @@ bool advertiseEddystone(String url) {
   char urlChars[31];
   url.toCharArray(urlChars, sizeof(urlChars));
 
-  for(int i=0; i<strlen(urlChars); i++) {
+  for(int i=0; i<url.length(); i++) {
     if(serviceDataIndex < 30) {
       EDDYSTONE_SERVICE_DATA[serviceDataIndex++] = (uint8_t)urlChars[i];
     }
@@ -78,18 +91,16 @@ bool advertiseEddystone(String url) {
 
   uint32_t errorCode = 0;
 
-  ble.clearAdvertisingPayload();
-
 //  ble.accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED);
-  errorCode = errorCode | ble.accumulateAdvertisingPayload(GapAdvertisingData::FLAGS, EDDYSTONE_FLAGS_DATA /* 0x01 */, sizeof(EDDYSTONE_FLAGS_DATA));
-  errorCode = errorCode | ble.accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS /* 0x03 */, EDDYSTONE_HEADER_DATA, sizeof(EDDYSTONE_HEADER_DATA));
-  errorCode = errorCode | ble.accumulateAdvertisingPayload(GapAdvertisingData::SERVICE_DATA /* 0x16 */, EDDYSTONE_SERVICE_DATA, serviceDataIndex);
+  errorCode = errorCode | ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::FLAGS, EDDYSTONE_FLAGS_DATA /* 0x01 */, sizeof(EDDYSTONE_FLAGS_DATA));
+  errorCode = errorCode | ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS /* 0x03 */, EDDYSTONE_HEADER_DATA, sizeof(EDDYSTONE_HEADER_DATA));
+  errorCode = errorCode | ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::SERVICE_DATA /* 0x16 */, EDDYSTONE_SERVICE_DATA, serviceDataIndex);
   
-  ble.setAdvertisingType(GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED);
-  ble.setAdvertisingInterval(160); /* 100ms; in multiples of 0.625ms. */
+  ble.gap().setAdvertisingType(GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED);
+  ble.gap().setAdvertisingInterval(100);
 
   if(errorCode == 0) {
-    errorCode = errorCode | ble.startAdvertising();
+    errorCode = errorCode | ble.gap().startAdvertising();
   }
 
   return errorCode == 0;
@@ -118,7 +129,7 @@ void loop() {
       int equalsIndex = commandString.indexOf("=");
       if(equalsIndex > 0 && equalsIndex < commandString.length()) {
         String command = commandString.substring(0, equalsIndex);
-        String param = commandString.substring(equalsIndex + 1, commandString.length());
+        String param = commandString.substring(equalsIndex + 1, commandString.length() - 1);
         handleCommand(command, param);
       }
      }
