@@ -41,7 +41,7 @@ public class DirectionControl extends RelativeLayout {
         this.mDirectionChangedListener = directionChangedListener;
     }
 
-    class RoundOutlineProvider extends ViewOutlineProvider {
+    private static class RoundOutlineProvider extends ViewOutlineProvider {
 
         @Override
         public void getOutline(View view, Outline outline) {

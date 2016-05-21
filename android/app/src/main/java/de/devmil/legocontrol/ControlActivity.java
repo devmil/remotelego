@@ -23,7 +23,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
 
     private static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
-    public static Intent getLaunchIntent(Context context, BluetoothDevice device) {
+    static Intent getLaunchIntent(Context context, BluetoothDevice device) {
         Intent result = new Intent(context, ControlActivity.class);
 
         result.putExtra(EXTRA_DEVICE_ADDRESS, device.getAddress());
@@ -68,75 +68,54 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
         mrbBlinkR = (RadioButton)findViewById(R.id.activity_control_rb_blink_r);
         mrbBlinkLR = (RadioButton)findViewById(R.id.activity_control_rb_blink_lr);
 
-        mDirectionControl.setDirectionChangedListener(new DirectionControl.IDirectionChangedListener() {
-            @Override
-            public void onDirectionChanged(int percentSpeed, int percentSteering) {
-                CarHandler carHandler = getCarHandler();
-                carHandler.setSpeed(percentSpeed);
-                carHandler.setSteering(percentSteering);
+        mDirectionControl.setDirectionChangedListener((percentSpeed, percentSteering) -> {
+            CarHandler carHandler = getCarHandler();
+            carHandler.setSpeed(percentSpeed);
+            carHandler.setSteering(percentSteering);
+        });
+
+        mSwitchTrunk.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) ->  {
+            CarHandler ch = getCarHandler();
+            if(ch != null) {
+                ch.setTrunkState(isChecked ? CarHandler.TrunkState.Open : CarHandler.TrunkState.Closed);
+            }
+        });
+        mSwitchMFL.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            CarHandler ch = getCarHandler();
+            if(ch != null) {
+                ch.setMovableFrontLightState(isChecked ? CarHandler.MovableFrontLightState.Active : CarHandler.MovableFrontLightState.Hidden);
             }
         });
 
-        mSwitchTrunk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        mrbBlinkOff.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
                 CarHandler ch = getCarHandler();
                 if(ch != null) {
-                    ch.setTrunkState(isChecked ? CarHandler.TrunkState.Open : CarHandler.TrunkState.Closed);
+                    ch.setBlinkMode(CarHandler.BlinkMode.Off);
                 }
             }
         });
-        mSwitchMFL.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        mrbBlinkL.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
                 CarHandler ch = getCarHandler();
                 if(ch != null) {
-                    ch.setMovableFrontLightState(isChecked ? CarHandler.MovableFrontLightState.Active : CarHandler.MovableFrontLightState.Hidden);
+                    ch.setBlinkMode(CarHandler.BlinkMode.Left);
                 }
             }
         });
-
-        mrbBlinkOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    CarHandler ch = getCarHandler();
-                    if(ch != null) {
-                        ch.setBlinkMode(CarHandler.BlinkMode.Off);
-                    }
+        mrbBlinkR.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
+                CarHandler ch = getCarHandler();
+                if(ch != null) {
+                    ch.setBlinkMode(CarHandler.BlinkMode.Right);
                 }
             }
         });
-        mrbBlinkL.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    CarHandler ch = getCarHandler();
-                    if(ch != null) {
-                        ch.setBlinkMode(CarHandler.BlinkMode.Left);
-                    }
-                }
-            }
-        });
-        mrbBlinkR.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    CarHandler ch = getCarHandler();
-                    if(ch != null) {
-                        ch.setBlinkMode(CarHandler.BlinkMode.Right);
-                    }
-                }
-            }
-        });
-        mrbBlinkLR.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    CarHandler ch = getCarHandler();
-                    if(ch != null) {
-                        ch.setBlinkMode(CarHandler.BlinkMode.Both);
-                    }
+        mrbBlinkLR.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked) {
+                CarHandler ch = getCarHandler();
+                if(ch != null) {
+                    ch.setBlinkMode(CarHandler.BlinkMode.Both);
                 }
             }
         });
@@ -242,13 +221,10 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
     @Override
     public void readyStateChanged(final boolean isReady) {
         //TODO: disable control elements when isReady == false
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(isReady) {
-                    adaptSwitchVisibility();
-                    adaptModelState();
-                }
+        runOnUiThread(() -> {
+            if(isReady) {
+                adaptSwitchVisibility();
+                adaptModelState();
             }
         });
     }

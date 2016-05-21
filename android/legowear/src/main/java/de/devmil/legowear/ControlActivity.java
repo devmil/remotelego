@@ -35,20 +35,12 @@ public class ControlActivity extends Activity {
         mDirectionControl = (DirectionControl)findViewById(R.id.activity_control_direction);
         mButtonExit = (Button)findViewById(R.id.activity_control_btnExit);
 
-        mDirectionControl.setDirectionChangedListener(new DirectionControl.IDirectionChangedListener() {
-            @Override
-            public void onDirectionChanged(int percentSpeed, int percentSteering) {
-                mCarHandler.setSpeed(percentSpeed);
-                mCarHandler.setSteering(percentSteering);
-            }
+        mDirectionControl.setDirectionChangedListener((percentSpeed, percentSteering) -> {
+            mCarHandler.setSpeed(percentSpeed);
+            mCarHandler.setSteering(percentSteering);
         });
 
-        mButtonExit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mButtonExit.setOnClickListener(v -> finish());
     }
 
     @Override
