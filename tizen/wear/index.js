@@ -28,7 +28,7 @@
 		}
 		devices.push({ name: name, address: address });
 		var listItem = document.createElement("li"); // make li element
-		listItem.innerHTML = "<a href=\"control.html\">" + name + "</a>";
+		listItem.innerHTML = "<a href=\"control.html?address=" + address + "\">" + name + "</a>";
 		list.appendChild(listItem);                 // append it to list
 		snapListviewWidget.refresh();               // important! please call refresh() of SnaplistView
 	}
