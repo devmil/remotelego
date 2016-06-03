@@ -17,15 +17,24 @@
 		//alert("l:" + directionControlKnob.offsetLeft); //0
 		//alert("t:" + directionControlKnob.offsetTop); //115
 		
-		carModel = models[getParameterByName("address")];
-		carModel.connect();
+		try {
 		
-		setKnobPosFromSpeedAndSteer(0, 0);
+			carModel = models[getParameterByName("address")];
+			carModel.connect();
+			
+			setKnobPosFromSpeedAndSteer(0, 0);
+		}
+		catch(ex) {
+		}
 	}, false);
 	
 	page.addEventListener("pagebeforehide", function pageBeforeHideHandler(e) {
 		if(carModel) {
-			carModel.disconnect();
+			try {
+				carModel.disconnect();
+			}
+			catch(ex) {
+			}
 		}
 	}, false);
 	
@@ -74,7 +83,7 @@
 			"translate3d(" + (offsetX - originOffsetX) + "px," + (offsetY - originOffsetY) + "px," + "0px)";
 		
 		carModel.setSteering(steerPercent);
-		carModel.setSpeed(speedPercent);
+		carModel.setSpeed(speedPercent * -1);
 	}
 	
 	function setKnobPosFromTouch(touch) {
@@ -104,7 +113,7 @@
 		var speed = (yPercent * 2) - 100;
 		
 		carModel.setSteering(steer);
-		carModel.setSpeed(speed);
+		carModel.setSpeed(speed * -1);
 	}
 	
 } () );

@@ -4,28 +4,41 @@ function CarModel (device) {
 	this.device = device;
 	this.service = undefined;
 	
+	this.isConnecting = false;
+	this.isConnected = false;
+	
 	this.steering = undefined;
 	this.lastSentSteering = undefined;
 	this.speed = undefined;
 	this.lastSentSpeed = undefined;
 	
-	this.sendTimeout = undefined,
+	this.sendTimeout = undefined;
 	
 	this.connect = function() {
-/*		this.device.connect(
-				function() {
-					service = device.getService("40480f29-7bad-4ea5-8bf8-499405c9b324");
-					isConnecting = false;
-					isConnected = true;
-				},
-				function() {
-					isConnecting = false;
-					isConnected = false;
-				});*/
-		this.device.connect();
+		if(this.isConnecting || this.isConnected) {
+			return;
+		}
+		var instance = this;
+		this.device.connect(
+			function onConnectionSuccess() {
+				instance.isConnected = true;
+				instance.isConnecting = false;
+			},
+			function onConnectionFailed() {
+				instance.isConnected = false;
+				instance.isConnecting = false;
+			});
+	};
+	
+	this.ensureConnected = function() {
+		if(this.isConnected || this.isConnecting) {
+			return;
+		}
+		this.connect();
 	};
 	
 	this.getService = function() {
+		this.ensureConnected();
 		if(!this.service && device) {
 			this.service = device.getService("40480f29-7bad-4ea5-8bf8-499405c9b324");
 		}
@@ -35,6 +48,11 @@ function CarModel (device) {
 	this.disconnect = function() {
 		this.device.disconnect();
 		this.service = undefined;
+		this.isConnected = false;
+		this.isConnecting = false;
+		if(this.sendTimeout) {
+			window.clearTimeout(this.sendTimeout);
+		}
 	};
 	
 	this.setSpeed = function(speedPercent) {
@@ -54,29 +72,38 @@ function CarModel (device) {
 	
 	this.transmitData = function() {
 		if(this.sendTimeout) {
-			this.sendTimeout = undefined;
+			return;
 		}
 		var instance = this;
 		this.sendTimeout = window.setTimeout(function() {
-			try {
-				var speedData = new Array(instance.speed);
-
-				instance.getService().characteristics[0].writeValue(speedData);
-				instance.lastSentSpeed = instance.speedPercent;
-			} catch(ex) {
-				console.log(ex);
+			instance.sendTimeout = undefined;
+			if(!instance.isConnected) {
+				return;
 			}
+			var service = instance.getService();
 			try {
-				var positivePercent = (instance.steering + 100) / 2;
-				var steeringData = new Array(positivePercent);
+				var angle = (instance.steering * 90) / 100;
+
+				var steeringData = new Array(1);
+				steeringData[0] = Math.floor(angle);
 				
-				instance.getService().characteristics[1].writeValue(steeringData);
+				service.characteristics[1].writeValue(steeringData);
 				instance.lastSentSteering = instance.steering;
 			}
 			catch(ex) {
 				console.log(ex);
 			}	
-			instance.sendTimeout = undefined;
+			window.setTimeout(function() {
+				try {
+					var speedData = new Array(1);
+					speedData[0] = Math.floor(instance.speed);
+					
+					service.characteristics[0].writeValue(speedData);
+					instance.lastSentSpeed = instance.speedPercent;
+				} catch(ex) {
+					console.log(ex);
+				}				
+			}, 50);
 		}, 200);
 	};
 }

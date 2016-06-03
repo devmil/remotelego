@@ -18,11 +18,17 @@ var models = {};
 			adapter = undefined;
 		}
 		
-		scan();
+		try {
+			scan();
+		} catch(ex) {
+		}
 	}, false);
 	
 	page.addEventListener("pagebeforehide", function pageHideHandler(e) {
-		stopScan();
+		try {
+			stopScan();			
+		} catch(ex) {
+		}
 	}, false);
 	
 	
