@@ -4,8 +4,12 @@ function CarModel (device) {
 	this.device = device;
 	this.service = undefined;
 	
+	this.steering = undefined;
 	this.lastSentSteering = undefined;
+	this.speed = undefined;
 	this.lastSentSpeed = undefined;
+	
+	this.sendTimeout = undefined,
 	
 	this.connect = function() {
 /*		this.device.connect(
@@ -34,32 +38,45 @@ function CarModel (device) {
 	};
 	
 	this.setSpeed = function(speedPercent) {
-		if(this.lastSentSpeed == speedPercent) {
+		if(this.lastSentSpeed === speedPercent) {
 			return;
 		}
-		try {
-			var data = new Array(speedPercent);
-
-			this.getService().characteristics[0].writeValue(data);
-			this.lastSentSpeed = speedPercent;
-		} catch(ex) {
-			console.log(ex);
-		}
+		this.speed = speedPercent;
+		this.transmitData();
 	};
 	
 	this.setSteering = function(steeringPercent) {
-		if(this.lastSentSteering == steeringPercent) {
+		if(this.lastSentSteering === steeringPercent) {
 			return;
 		}
-		try {
-			var positivePercent = (steeringPercent + 100) / 2;
-			var data = new Array(positivePercent);
-			
-			this.getService().characteristics[1].writeValue(data);
-			this.lastSentSteering = steeringPercent;
+		this.steering = steeringPercent;
+	};
+	
+	this.transmitData = function() {
+		if(this.sendTimeout) {
+			this.sendTimeout = undefined;
 		}
-		catch(ex) {
-			console.log(ex);
-		}
+		var instance = this;
+		this.sendTimeout = window.setTimeout(function() {
+			try {
+				var speedData = new Array(instance.speed);
+
+				instance.getService().characteristics[0].writeValue(speedData);
+				instance.lastSentSpeed = instance.speedPercent;
+			} catch(ex) {
+				console.log(ex);
+			}
+			try {
+				var positivePercent = (instance.steering + 100) / 2;
+				var steeringData = new Array(positivePercent);
+				
+				instance.getService().characteristics[1].writeValue(steeringData);
+				instance.lastSentSteering = instance.steering;
+			}
+			catch(ex) {
+				console.log(ex);
+			}	
+			instance.sendTimeout = undefined;
+		}, 200);
 	};
 }
