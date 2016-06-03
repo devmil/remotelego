@@ -8,6 +8,7 @@
     <name>LegoControl</name>
     <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
     <tizen:privilege name="http://tizen.org/privilege/bluetooth.admin"/>
+    <tizen:privilege name="http://tizen.org/privilege/bluetooth"/>
     <tizen:profile name="wearable"/>
     <tizen:setting background-support="disable" encryption="disable" hwkey-event="enable"/>
 </widget>

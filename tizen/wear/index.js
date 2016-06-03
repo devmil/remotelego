@@ -1,3 +1,5 @@
+var models = {};
+
 ( function () {
 	var snapListviewWidget, list;
 	var page = document.getElementById("main");
@@ -10,8 +12,12 @@
 			snapListviewWidget = tau.widget.SnapListview(list); // for call refresh()
 		}
 		
-		adapter = tizen.bluetooth.getLEAdapter();
-
+		if(tizen.bluetooth) {
+			adapter = tizen.bluetooth.getLEAdapter();
+		} else {
+			adapter = undefined;
+		}
+		
 		scan();
 	}, false);
 	
@@ -20,17 +26,22 @@
 	}, false);
 	
 	
-	function addDevice(name, address) {
+	function addDevice(device) {
 		for(var i=0; i<devices.length; i++) {
-			if(devices[i].address === address) {
-				return;
+			if(devices[i].address === device.address) {
+				return false;
 			}
 		}
-		devices.push({ name: name, address: address });
+		devices.push({ name: device.name, address: device.address });
 		var listItem = document.createElement("li"); // make li element
-		listItem.innerHTML = "<a href=\"control.html?address=" + address + "\">" + name + "</a>";
+		listItem.innerHTML = "<a href=\"control.html?address=" + device.address + "\">" + device.name + "</a>";
 		list.appendChild(listItem);                 // append it to list
 		snapListviewWidget.refresh();               // important! please call refresh() of SnaplistView
+		
+		var model = new CarModel(device);
+		models[device.address] = model;
+		
+		return true;
 	}
 	
 	function onScanError(error) {
@@ -40,13 +51,20 @@
 	function onDeviceFound(device)
 	{
 		if(device.uuids.length > 0 && device.uuids[0].toLowerCase() === "40480f29-7bad-4ea5-8bf8-499405c9b324") {
-			addDevice(device.name, device.address);
+			addDevice(device);
 		}
 	}
 	
 	function scan() {
 		console.log("Start scan");
-		adapter.startScan(onDeviceFound, onScanError);
+		if(adapter) {
+			adapter.startScan(onDeviceFound, onScanError);
+		} else {
+			var dummyDevice = new Object();
+			dummyDevice.name = "Dummy";
+			dummyDevice.address = "NO:NE";
+			addDevice(dummyDevice);
+		}
 	}
 	
 	function stopScan() {
