@@ -2,7 +2,8 @@
 	var page = document.getElementById("control");
 	var directionControl;
 	var directionControlKnob;
-	var lastTouch = null;
+	var lastTouch = undefined;
+	var isTouchActive = false;
 	
 	var carModel;
 	
@@ -12,6 +13,7 @@
 		
 		directionControl.addEventListener("touchstart", onDirectionControlTouchStart);
 		directionControl.addEventListener("touchend", 	onDirectionControlTouchEnd);
+		directionControl.addEventListener("touchcancel",onDirectionControlTouchCancel);
 		directionControl.addEventListener("touchmove", 	onDirectionControlTouchMove);
 		
 		//alert("l:" + directionControlKnob.offsetLeft); //0
@@ -50,23 +52,39 @@
 	
 	function onDirectionControlTouchStart(ev) {
 		ev.preventDefault();
+		isTouchActive = true;
 		lastTouch = ev.changedTouches[0];
 	    window.requestAnimationFrame(handleTouch);
 	}
 	
 	function onDirectionControlTouchEnd(ev) {
 		ev.preventDefault();
-		setKnobPosFromSpeedAndSteer(0, 0);
+		isTouchActive = false;
+		lastTouch = null;
+		window.requestAnimationFrame(handleTouch);
+	}
+	
+	function onDirectionControlTouchCancel(ev) {
+		ev.preventDefault();
+		isTouchActive = false;
+		lastTouch = null;
+		window.requestAnimationFrame(handleTouch);
 	}
 	
 	function onDirectionControlTouchMove(ev) {
 		ev.preventDefault();
-		lastTouch = ev.changedTouches[0];
-	    window.requestAnimationFrame(handleTouch);
+		if(isTouchActive) {
+			lastTouch = ev.changedTouches[0];
+		    window.requestAnimationFrame(handleTouch);
+		}
 	}
 	
 	function handleTouch(){
-		setKnobPosFromTouch(lastTouch);
+		if(lastTouch) {
+			setKnobPosFromTouch(lastTouch);
+		} else {
+			setKnobPosFromSpeedAndSteer(0, 0);
+		}
 	}
 	
 	function setKnobPosFromSpeedAndSteer(speedPercent, steerPercent) {
