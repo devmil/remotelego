@@ -63,23 +63,14 @@ function CarModel (device) {
 		this.service = undefined;
 		this.isConnected = false;
 		this.isConnecting = false;
-		if(this.sendTimeout) {
-			window.clearTimeout(this.sendTimeout);
-		}
 	};
 	
 	this.setSpeed = function(speedPercent) {
-		if(this.lastSentSpeed === speedPercent) {
-			return;
-		}
 		this.speed = speedPercent;
 		this.transmitData();
 	};
 	
 	this.setSteering = function(steeringPercent) {
-		if(this.lastSentSteering === steeringPercent) {
-			return;
-		}
 		this.steering = steeringPercent;
 		this.transmitData();
 	};
@@ -148,10 +139,6 @@ function CarModel (device) {
 		if(!this.lastUpdate) {
 			return true;
 		}
-		//force an update every 2s
-		if(new Date().getTime() - this.lastUpdate.getTime() > (2 * 1000)) {
-			return true;
-		}
 		return this.lastSentSpeed !== this.speed
 			|| this.lastSentSteering !== this.steering;
 	};
@@ -171,18 +158,19 @@ function CarModel (device) {
 		this.ensureConnectedPromise()
 		.then(this.transmitSteeringPromise())
 		.then(this.transmitSpeedPromise())
+		.then(function() {
+			console.log("Transmitting finished");
+			instance.lastUpdate = new Date();
+		})
 		.catch(function() {
-			instance.isTransmitting = false;
 		})
 		.then(function() {
 			instance.isTransmitting = false;
-			console.log("Transmitting finished");
-			instance.lastUpdate = new Date();
-			if(instance.isDirty()) {
+			if(instance.isDirty() && instance.isConnected) {
 				window.setTimeout(function() {
 					instance.transmitData();					
 				}, 0);
-			}
+			}			
 		});
 	};
 }

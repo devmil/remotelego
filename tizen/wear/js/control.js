@@ -100,6 +100,8 @@
 		directionControlKnob.style.transform = 
 			"translate3d(" + (offsetX - originOffsetX) + "px," + (offsetY - originOffsetY) + "px," + "0px)";
 		
+		console.log("setting knob pos from values: speed=" + speedPercent + ", steering=" + steerPercent);
+		
 		carModel.setSteering(steerPercent);
 		carModel.setSpeed(speedPercent * -1);
 	}
@@ -129,6 +131,8 @@
 		
 		var steer = (xPercent * 2) - 100;
 		var speed = (yPercent * 2) - 100;
+		
+		console.log("setting knob pos from touch: speed=" + speed + ", steering=" + steer);
 		
 		carModel.setSteering(steer);
 		carModel.setSpeed(speed * -1);
