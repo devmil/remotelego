@@ -11,6 +11,7 @@ function CarModel (device) {
 	this.lastSentSteering = undefined;
 	this.speed = undefined;
 	this.lastSentSpeed = undefined;
+	this.lastUpdate = undefined;
 	
 	this.isTransmitting = false;
 	
@@ -30,15 +31,27 @@ function CarModel (device) {
 			});
 	};
 	
-	this.ensureConnected = function() {
-		if(this.isConnected || this.isConnecting) {
-			return;
-		}
-		this.connect();
+	this.ensureConnectedPromise = function() {
+		var instance = this;
+		var result = new Promise(function(resolve, reject) {
+			if(instance.isConnected) {
+				resolve();
+				return;
+			}
+			if(instance.isConnecting) {
+				reject();
+				return;
+			}
+			instance.device.connect(function onSuccess() {
+				resolve();
+			}, function onError() {
+				reject();
+			});
+		});
+		return result;
 	};
 	
 	this.getService = function() {
-		this.ensureConnected();
 		if(!this.service && device) {
 			this.service = device.getService("40480f29-7bad-4ea5-8bf8-499405c9b324");
 		}
@@ -71,20 +84,6 @@ function CarModel (device) {
 		this.transmitData();
 	};
 	
-	this.ensureConnectionPromise = function() {
-		var instance = this;
-		var result = new Promise(
-				function(resolve, reject) {
-					instance.ensureConnected();
-					if(!instance.isConnected) {
-						reject();
-					} else {
-						resolve();
-					}
-				});
-		return result;
-	};
-	
 	this.transmitSteeringPromise = function() {
 		var instance = this;
 		var steeringPromise = new Promise(
@@ -93,18 +92,23 @@ function CarModel (device) {
 						resolve();
 						return;
 					}
+					var sentSteering = instance.steering;
 					var angle = (instance.steering * 90) / 100;
 
 					var steeringData = new Array(1);
 					steeringData[0] = Math.floor(angle);
+					
+					console.log("Sending steering (" + sentSteering + "%)");
 
 					instance.getService().characteristics[1].writeValue(
 							steeringData,
 							function onSuccess() {
-								instance.lastSentSteering = instance.steering;
+								console.log("Sending steering -- OK");
+								instance.lastSentSteering = sentSteering;
 								resolve();
 							},
 							function onError() {
+								console.log("Sending steering -- FAIL");
 								resolve();
 							});
 				});
@@ -120,16 +124,20 @@ function CarModel (device) {
 						return;
 					}
 					
+					var sentSpeed = instance.speed;
 					var speedData = new Array(1);
 					speedData[0] = Math.floor(instance.speed);
 					
+					console.log("Sending speed (" + sentSpeed + "%)");
 					instance.getService().characteristics[0].writeValue(
 							speedData,
 							function onSuccess() {
-								instance.lastSentSpeed = instance.speed;
+								console.log("Sending speed -- OK");
+								instance.lastSentSpeed = sentSpeed;
 								resolve();
 							},
 							function onError() {
+								console.log("Sending speed -- FAIL");
 								resolve();
 							});
 				});
@@ -137,27 +145,43 @@ function CarModel (device) {
 	};
 	
 	this.isDirty = function() {
+		if(!this.lastUpdate) {
+			return true;
+		}
+		//force an update every 2s
+		if(new Date().getTime() - this.lastUpdate.getTime() > (2 * 1000)) {
+			return true;
+		}
 		return this.lastSentSpeed !== this.speed
 			|| this.lastSentSteering !== this.steering;
 	};
 	
 	this.transmitData = function() {
+		console.log("Got transmit request");
 		if(this.isTransmitting) {
+			console.log("Is currently transmitting => rejecting request");
 			return;
 		}
 		if(!this.isDirty()) {
+			console.log("Nothing dirty, don't transmit");
 			return;
 		}
+		this.isTransmitting = true;
 		var instance = this;
-		this.ensureConnectionPromise()
+		this.ensureConnectedPromise()
 		.then(this.transmitSteeringPromise())
 		.then(this.transmitSpeedPromise())
+		.catch(function() {
+			instance.isTransmitting = false;
+		})
 		.then(function() {
 			instance.isTransmitting = false;
+			console.log("Transmitting finished");
+			instance.lastUpdate = new Date();
 			if(instance.isDirty()) {
 				window.setTimeout(function() {
 					instance.transmitData();					
-				}, 100);
+				}, 0);
 			}
 		});
 	};
