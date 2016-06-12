@@ -114,7 +114,7 @@ void LegoCarModel::sendLightState() {
     if(m_lightState != LightState::Off) {
         ledsFrontOn = true;
         ledsBackOn = true;
-        ledsFogOn = m_lightState == LightState::FogLight;
+        ledsFogOn = m_lightState == LightState::FogLight && m_mflState == MovableFrontLightState::Active;
     }    
   }
 
@@ -140,20 +140,22 @@ void LegoCarModel::setTrunkState(TrunkState trunkState) {
   uint8_t featureNumber = 1;
   uint8_t direction = 0;
   uint8_t speedPercent = 0;
-  uint8_t timeoutSeconds = 0;
+  uint16_t timeoutMilliseconds = 0;
 
-  speedPercent = 30;
-  timeoutSeconds = 2;
+  speedPercent = 40;
+  
   if(m_trunkState == TrunkState::Closed) {
+    timeoutMilliseconds = 2000;
     direction = 0;
   } else if(trunkState == TrunkState::Open) {
+    timeoutMilliseconds = 2500;
     direction = 1;
   }
 
   std::vector<AVRCommandData> commands;
   commands.push_back(AVRCommandFactory::createFeatureMotorSpeedCommand(featureNumber, speedPercent));
   commands.push_back(AVRCommandFactory::createFeatureMotorDirectionCommand(featureNumber, direction));
-  commands.push_back(AVRCommandFactory::createFeatureMotorTimeoutCommand(featureNumber, timeoutSeconds));
+  commands.push_back(AVRCommandFactory::createFeatureMotorTimeoutMillisecondsCommand(featureNumber, timeoutMilliseconds));
 
   AVRProtocol::send(commands);
 }
@@ -173,12 +175,14 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
   uint8_t speedPercent = 0;
   uint16_t timeoutMilliseconds = 0;
 
-  speedPercent = 80;
-  timeoutMilliseconds = 2500;
   if(m_mflState == MovableFrontLightState::Hidden) {
     direction = 0;
+    speedPercent = 70;
+    timeoutMilliseconds = 5000;
   } else if(m_mflState == MovableFrontLightState::Active) {
     direction = 1;
+    speedPercent = 80;
+    timeoutMilliseconds = 2500;
   }
 
   std::vector<AVRCommandData> commands;
@@ -187,6 +191,8 @@ void LegoCarModel::setMovableFrontLightState(MovableFrontLightState mflState) {
   commands.push_back(AVRCommandFactory::createFeatureMotorTimeoutMillisecondsCommand(featureNumber, timeoutMilliseconds));
 
   AVRProtocol::send(commands);
+
+  sendLightState();
 }
 
 BlinkMode LegoCarModel::getBlinkMode() {

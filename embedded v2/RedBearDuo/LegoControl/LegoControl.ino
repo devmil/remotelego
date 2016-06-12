@@ -1,8 +1,7 @@
-#if defined(ARDUINO) 
+//RedBearDuo Arduino Board Plugin v 0.2.7
+//RedBearDuo Firmware v 0.2.3
+
 SYSTEM_MODE(MANUAL);//do not connect to cloud
-#else
-SYSTEM_MODE(AUTOMATIC);//connect to cloud
-#endif
 
 #include "AVRCommunication.h"
 #include "BLECommunication.h"
@@ -22,12 +21,21 @@ void setup() {
   pinMode(led, OUTPUT);
   Serial.begin(115200);
 
+  while(!Serial) {
+    delay(10);
+  }
+  Serial.println("LegoControl: start");
+
+  Serial.println("LegoControl: init AVR communication");
   AVRProtocol::init();
 
+  Serial.println("LegoControl: init BLE service");
   BLE_configure(s_carModel);
 
+  Serial.println("LegoControl: init BLE Nano communication");
   BLENano::init();
 
+  Serial.println("LegoControl: init Car model");
   s_carModel.init();
 }
 
