@@ -18,9 +18,18 @@ var models = {};
 			adapter = undefined;
 		}
 		
+		//clear cashed devices and models
+		devices = [];
+		models = {};
+
+		while(list.childNodes.length > 0) {
+			list.removeChild(list.childNodes[0]);
+		}
+		
 		try {
 			scan();
 		} catch(ex) {
+			console.log(ex);
 		}
 	}, false);
 	
@@ -28,6 +37,7 @@ var models = {};
 		try {
 			stopScan();			
 		} catch(ex) {
+			console.log(ex);
 		}
 	}, false);
 	
@@ -56,8 +66,12 @@ var models = {};
 	
 	function onDeviceFound(device)
 	{
-		if(device.uuids.length > 0 && device.uuids[0].toLowerCase() === "40480f29-7bad-4ea5-8bf8-499405c9b324") {
-			addDevice(device);
+		try {
+			if(device.uuids.length > 0 && device.uuids[0].toLowerCase() === "40480f29-7bad-4ea5-8bf8-499405c9b324") {
+				addDevice(device);
+			}
+		} catch(ex) {
+			console.log(ex);
 		}
 	}
 	

@@ -16,18 +16,15 @@
 		directionControl.addEventListener("touchcancel",onDirectionControlTouchCancel);
 		directionControl.addEventListener("touchmove", 	onDirectionControlTouchMove);
 		
-		//alert("l:" + directionControlKnob.offsetLeft); //0
-		//alert("t:" + directionControlKnob.offsetTop); //115
-		
 		try {
 		
 			carModel = models[getParameterByName("address")];
 			carModel.connect();
-			
-			setKnobPosFromSpeedAndSteer(0, 0);
 		}
 		catch(ex) {
+			console.log(ex);
 		}
+		setKnobPosFromSpeedAndSteer(0, 0);
 	}, false);
 	
 	page.addEventListener("pagebeforehide", function pageBeforeHideHandler(e) {
