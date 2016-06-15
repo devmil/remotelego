@@ -1,0 +1,35 @@
+h1 {
+  color: #369;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 250%;
+}
+body {
+  margin: 2em;
+}
+
+ /*
+  * See https://github.com/angular/angular.io/blob/master/public/docs/_examples/styles.css
+  * for the full set of master styles used by the documentation samples
+  */
+
+.directioncontrol-box{
+	margin-top: 40px;
+	margin-left: 40px;
+	width: 100vmin;
+	height: 100vmin;
+	background:lightgray;
+	touch-action:none;
+    pointer-events: none;
+}
+
+.directioncontrol-knob{
+	width: 40px;
+	height: 40px;
+	border-radius:50%;
+	-webkit-box-shadow: 0px -1px 9px 0px rgba(0,0,0,0.75);
+	-moz-box-shadow: 0px -1px 9px 0px rgba(0,0,0,0.75);
+	 box-shadow: 0px -1px 9px 0px rgba(0,0,0,0.75);
+	background:darkgray;
+	touch-action:none;
+    pointer-events: none;
+}
