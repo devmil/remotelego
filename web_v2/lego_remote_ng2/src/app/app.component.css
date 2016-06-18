@@ -1,0 +1,23 @@
+.fill-space{
+    flex: 1 1 auto;
+}
+
+.control-container{
+    flex:1;
+    background:lightgray;
+}
+
+.control-footer-container{
+    background:darkgray;
+    display: flex;
+}
+
+.flexed-slide{
+    flex:1;
+}
+
+:host{
+    display: flex;
+    flex-flow: column nowrap;
+    flex: 1;
+}
