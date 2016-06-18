@@ -1,11 +1,14 @@
+:host{
+    flex:1;
+    display: flex;
+}
 .directioncontrol-box{
 	margin-top: 40px;
 	margin-left: 40px;
-	width: 100vmin;
-	height: 100vmin;
 	background:lightgray;
 	touch-action:none;
     pointer-events: none;
+    flex:1;
 }
 
 .directioncontrol-knob{

@@ -52,6 +52,19 @@ export class AppComponent {
     this.deinit();
   }
 
+  isConnected(){
+    return this.currentDevice != null;
+  }
+
+  toggleConnectionStatus(){
+    if(this.isConnected()){
+      this.doDisconnect();
+    }
+    else{
+      this.doConnect();
+    }
+  }
+
   doDisconnect() {
     if (this.currentDevice != null) {
       if (this.currentDevice.gatt.connected) {

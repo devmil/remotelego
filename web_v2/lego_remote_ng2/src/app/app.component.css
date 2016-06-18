@@ -4,6 +4,7 @@
 
 .control-container{
     flex:1;
+    display: flex;
     background:lightgray;
 }
 

@@ -1,17 +1,11 @@
 <md-toolbar color="primary">
   <span class="fill-space">LegoControl app</span>
-  <button md-raised-button color="accent">CONNECT</button>
+  <button md-raised-button color="accent" (click)="toggleConnectionStatus()">{{isConnected()?"DISCONNECT" :"CONNECT"}}</button>
 </md-toolbar>
-<div class="control-container">
-<div *ngIf="!currentModel" align="center">
-        <div>Click connect to connect to a vehicle</div>
-        <div><button (click)="doConnect()">Connect</button></div>
-    </div>
-    <div *ngIf="currentModel">
-        <div><button (click)="doDisconnect()">Disconnect</button></div>
-        <car-control [model]="currentModel"></car-control>
-    </div>
+<div class="control-container" *ngIf="currentModel">
+  <car-control [model]="currentModel"></car-control>
 </div>
-<footer class="control-footer-container">
-<md-slide-toggle class="flexed-slide">lights</md-slide-toggle><md-slide-toggle class="flexed-slide">Rear</md-slide-toggle>
+<footer class="control-footer-container" *ngIf="currentModel">
+  <md-slide-toggle class="flexed-slide">Lights</md-slide-toggle>
+  <md-slide-toggle class="flexed-slide">Rear</md-slide-toggle>
 </footer>
