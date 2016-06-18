@@ -83,6 +83,8 @@ export class AppComponent {
   init(service, device, server) {
     this.currentDevice = device;
     this.currentServer = server;
-    this.currentModel = new LegoCar(server, service, device.name);
-  }
+    let carModel = new LegoCar(server, service, device.name);
+    carModel.initData();
+    this.currentModel = carModel;
+  } 
 }
