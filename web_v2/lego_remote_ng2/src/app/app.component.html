@@ -3,7 +3,14 @@
   <button md-raised-button color="accent">CONNECT</button>
 </md-toolbar>
 <div class="control-container">
-
+<div *ngIf="!currentModel" align="center">
+        <div>Click connect to connect to a vehicle</div>
+        <div><button (click)="doConnect()">Connect</button></div>
+    </div>
+    <div *ngIf="currentModel">
+        <div><button (click)="doDisconnect()">Disconnect</button></div>
+        <car-control [model]="currentModel"></car-control>
+    </div>
 </div>
 <footer class="control-footer-container">
 <md-slide-toggle class="flexed-slide">lights</md-slide-toggle><md-slide-toggle class="flexed-slide">Rear</md-slide-toggle>
