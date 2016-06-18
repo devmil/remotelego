@@ -11,10 +11,7 @@
 .control-footer-container{
     background:darkgray;
     display: flex;
-}
-
-.flexed-slide{
-    flex:1;
+    justify-content: space-around;
 }
 
 :host{
