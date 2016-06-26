@@ -3,7 +3,7 @@
 #include "AVRCommunication.h"
 #include "NANOCommunication.h"
 
-const String EDDYSTONE_URL = "https://www.devmil.de";
+const String EDDYSTONE_URL = "https://goo.gl/WIVbnM";
 
 LegoCarModel::LegoCarModel() {
   m_speedPercent = 0;
