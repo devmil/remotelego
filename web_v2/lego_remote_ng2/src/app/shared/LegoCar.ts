@@ -6,25 +6,25 @@ export class LegoCar {
     static FRONT_LIGHT_CHARACTERISTIC_UUID : string = "fa10e4de-259e-4d23-9f59-45a9c66802ca";
     static BLINK_CHARACTERISTIC_UUID : string = "aad03b81-f2ea-47db-ae1e-7c2f9e86e93e";
 
-    m_server : any;
-    m_service : any;
-    m_name : string;
+    private m_server : any;
+    private m_service : any;
+    private m_name : string;
 
-	steering : number;
-	lastSentSteering : number;
-	speed : number;
-	lastSentSpeed : number;
-	trunkIsOpen : boolean;
-	lastSentTrunkIsOpen : boolean;
-	frontLightIsEnabled : boolean;
-	lastSentFrontLightIsEnabled : boolean;
+	private m_steering : number;
+	private m_lastSentSteering : number;
+	private m_speed : number;
+	private m_lastSentSpeed : number;
+	private m_trunkIsOpen : boolean;
+	private m_lastSentTrunkIsOpen : boolean;
+	private m_frontLightIsEnabled : boolean;
+	private m_lastSentFrontLightIsEnabled : boolean;
 
-    isInitialized : boolean = false;
-    hasTrunkFeature : boolean = false;
-    hasFrontLightFeature : boolean = false;
-    hasBlinkFeature : boolean = false;
+    private m_isInitialized : boolean = false;
+    private m_hasTrunkFeature : boolean = false;
+    private m_hasFrontLightFeature : boolean = false;
+    private m_hasBlinkFeature : boolean = false;
 	
-	isTransmitting : boolean;
+	private m_isTransmitting : boolean;
 
     constructor(server, service, name : string) {
         this.m_server = server;
@@ -32,50 +32,78 @@ export class LegoCar {
         this.m_name = name;
     }
 
-    initData() {
+    public initData() {
         Promise.all( [
             this.m_service.getCharacteristic(LegoCar.TRUNK_CHARACTERISTIC_UUID)
-            .then((characteristic) => { this.hasTrunkFeature = true; })
-            .catch((e) => { this.hasTrunkFeature = false; }),
+            .then((characteristic) => { this.m_hasTrunkFeature = true; })
+            .catch((e) => { this.m_hasTrunkFeature = false; }),
 
             this.m_service.getCharacteristic(LegoCar.FRONT_LIGHT_CHARACTERISTIC_UUID)
-            .then((characteristic) => { this.hasFrontLightFeature = true; })
-            .catch((e) => { this.hasFrontLightFeature = false; }),
+            .then((characteristic) => { this.m_hasFrontLightFeature = true; })
+            .catch((e) => { this.m_hasFrontLightFeature = false; }),
 
             this.m_service.getCharacteristic(LegoCar.BLINK_CHARACTERISTIC_UUID)
-            .then((characteristic) => { this.hasBlinkFeature = true; })
-            .catch((e) => { this.hasBlinkFeature = false; })
+            .then((characteristic) => { this.m_hasBlinkFeature = true; })
+            .catch((e) => { this.m_hasBlinkFeature = false; })
         ])
-        .then((r) => { this.isInitialized = true; });
+        .then((r) => { this.m_isInitialized = true; });
     }
 
-    setSteering(steeringPercent: number) {
-        this.steering = steeringPercent;
+    public get hasTrunkFeature() : boolean {
+        return this.m_hasTrunkFeature;
+    }
+
+    public get hasFrontLightFeature() : boolean {
+        return this.m_hasFrontLightFeature;
+    }
+
+    public get hasBlinkFeature() : boolean {
+        return this.m_hasBlinkFeature;
+    }
+
+    public get steering() : number {
+        return this.m_steering;
+    }
+
+    public set steering(steeringPercent : number) {
+        this.m_steering = steeringPercent;
         this.transmitData();
     }
 
-    setSpeed(speedPercent : number) {
-        this.speed = speedPercent;
+    public get speed() : number {
+        return this.m_speed;
+    }
+
+    public set speed(speedPercent : number) {
+        this.m_speed = speedPercent;
         this.transmitData();
     }
 
-    setTrunkOpen(isOpen : boolean) {
-		this.trunkIsOpen = isOpen;
-		this.transmitData();
-	};
-	
-	setFrontLightIsEnabled(isEnabled : boolean) {
-		this.frontLightIsEnabled = isEnabled;
-		this.transmitData();
-	};
+    public get trunkIsOpen() : boolean {
+        return this.m_trunkIsOpen;
+    }
 
-    updateIfDirty() {
+    public set trunkIsOpen(isOpen : boolean) {
+		this.m_trunkIsOpen = isOpen;
+		this.transmitData();
+    }
+
+    public get frontLightIsEnabled() : boolean {
+        return this.m_frontLightIsEnabled;
+    }
+
+    public set frontLightIsEnabled(isEnabled : boolean) {
+		this.m_frontLightIsEnabled = isEnabled;
+		this.transmitData();
+    }
+
+    private updateIfDirty() {
 		if(this.isDirty() && this.m_server.connected) {
 			window.setTimeout(() => { this.transmitData(); }, 0);
 		}
 	};
 
-    transmitDataPromise(characteristicUUID : string, checkDirtyAction, getBytesAction, successAction) {
+    private transmitDataPromise(characteristicUUID : string, checkDirtyAction, getBytesAction, successAction) {
         return this.m_service.getCharacteristic(characteristicUUID)
         .then((characteristic) => {
             if(checkDirtyAction()) {
@@ -90,16 +118,16 @@ export class LegoCar {
         .catch(() => {});
     }
 
-    isDirty() : boolean {
-        return this.lastSentSpeed !== this.speed
-			|| this.lastSentSteering !== this.steering
-			|| this.lastSentTrunkIsOpen !== this.trunkIsOpen
-			|| this.lastSentFrontLightIsEnabled !== this.frontLightIsEnabled;
+    private isDirty() : boolean {
+        return this.m_lastSentSpeed !== this.speed
+			|| this.m_lastSentSteering !== this.steering
+			|| this.m_lastSentTrunkIsOpen !== this.trunkIsOpen
+			|| this.m_lastSentFrontLightIsEnabled !== this.frontLightIsEnabled;
     }
 
-    transmitData() {
+    private transmitData() {
         console.log("Got transmit request");
-		if(this.isTransmitting) {
+		if(this.m_isTransmitting) {
 			console.log("Is currently transmitting => rejecting request");
 			return;
 		}
@@ -107,77 +135,77 @@ export class LegoCar {
 			console.log("Nothing dirty, don't transmit");
 			return;
 		}
-		this.isTransmitting = true;
+		this.m_isTransmitting = true;
 
-        var steering = this.steering;
-        var speed = this.speed;
-        var trunkIsOpen = this.trunkIsOpen;
-        var frontLightIsEnabled = this.frontLightIsEnabled
+        var l_steering = this.steering;
+        var l_speed = this.speed;
+        var l_trunkIsOpen = this.trunkIsOpen;
+        var l_frontLightIsEnabled = this.frontLightIsEnabled
 
         Promise.all([
             this.transmitDataPromise(
                 LegoCar.STEER_CHARACTERISTIC_UUID,
-                () => { return steering != this.lastSentSteering; },
+                () => { return l_steering != this.m_lastSentSteering; },
                 () => {  
-					var angle = (steering * 90) / 100;
+					var angle = (l_steering * 90) / 100;
 
 					var steeringData = new Uint8Array(1);
 					steeringData[0] = Math.floor(angle);
 					
-					console.log("Sending steering (" + steering + "%)");
+					console.log("Sending steering (" + l_steering + "%)");
 
                     return steeringData;
                 },
                 () => {
-                    this.lastSentSteering = steering;
-                    console.log("Sent steering (" + steering + "%)");
+                    this.m_lastSentSteering = l_steering;
+                    console.log("Sent steering (" + l_steering + "%)");
                 }),
 
             this.transmitDataPromise(
                 LegoCar.SPEED_CHARACTERISTIC_UUID,
-                () => { return speed != this.lastSentSpeed; },
+                () => { return l_speed != this.m_lastSentSpeed; },
                 () => {  
 					var speedData = new Uint8Array(1);
-					speedData[0] = Math.floor(speed);
+					speedData[0] = Math.floor(l_speed);
 					
-					console.log("Sending speed (" + speed + "%)");
+					console.log("Sending speed (" + l_speed + "%)");
 
                     return speedData;
                 },
                 () => {
-                    this.lastSentSpeed = speed;
-                    console.log("Sent speed (" + speed + "%)");
+                    this.m_lastSentSpeed = l_speed;
+                    console.log("Sent speed (" + l_speed + "%)");
                 }),
                 
             this.transmitDataPromise(
                 LegoCar.TRUNK_CHARACTERISTIC_UUID,
-                () => { return this.hasTrunkFeature && trunkIsOpen != this.lastSentTrunkIsOpen; },
+                () => { return this.hasTrunkFeature && l_trunkIsOpen != this.m_lastSentTrunkIsOpen; },
                 () => {  
 					var trunkData = new Uint8Array(1);
-					trunkData[0] = trunkIsOpen ? 1 : 0;
+					trunkData[0] = l_trunkIsOpen ? 2 : 1;
 					
-					console.log("Sending trunk state (" + trunkIsOpen + ")");
+					console.log("Sending trunk state (" + l_trunkIsOpen + ")");
 
                     return trunkData;
                 },
                 () => {
-                    this.lastSentTrunkIsOpen = trunkIsOpen;
-					console.log("Sent trunk state (" + trunkIsOpen + ")");
+                    this.m_lastSentTrunkIsOpen = l_trunkIsOpen;
+					console.log("Sent trunk state (" + l_trunkIsOpen + ")");
                 }),
 
             this.transmitDataPromise(
                 LegoCar.FRONT_LIGHT_CHARACTERISTIC_UUID,
-                () => { return this.hasFrontLightFeature && frontLightIsEnabled != this.lastSentFrontLightIsEnabled; },
+                () => { return this.hasFrontLightFeature && l_frontLightIsEnabled != this.m_lastSentFrontLightIsEnabled; },
                 () => {  
 					var frontLightData = new Uint8Array(1);
-					frontLightData[0] = frontLightIsEnabled ? 1 : 0;
+					frontLightData[0] = l_frontLightIsEnabled ? 2 : 1;
 					
-					console.log("Sending front light state (" + frontLightIsEnabled + ")");
+					console.log("Sending front light state (" + l_frontLightIsEnabled + ")");
                     return frontLightData;
                 },
                 () => {
-                    this.lastSentFrontLightIsEnabled = frontLightIsEnabled;
-					console.log("Sent front light state (" + frontLightIsEnabled + ")");
+                    this.m_lastSentFrontLightIsEnabled = l_frontLightIsEnabled;
+					console.log("Sent front light state (" + l_frontLightIsEnabled + ")");
                 }),
 
                 //TODO: blink
@@ -185,7 +213,7 @@ export class LegoCar {
         .catch(() => {
         })
         .then(() => {
-            this.isTransmitting = false;
+            this.m_isTransmitting = false;
             this.updateIfDirty();
         });
     }

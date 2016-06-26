@@ -6,7 +6,7 @@
   <car-control [model]="currentModel"></car-control>
 </div>
 <footer class="control-footer-container" *ngIf="currentModel">
-  <md-slide-toggle class="flexed-slide" [disabled]="!currentModel?.hasFrontLightFeature">Front Lights</md-slide-toggle>
+  <md-slide-toggle class="flexed-slide" [disabled]="!currentModel?.hasFrontLightFeature" [(ngModel)]="currentModel.frontLightIsEnabled">Front Lights</md-slide-toggle>
   <md-slide-toggle class="flexed-slide" [disabled]="!currentModel?.hasBlinkFeature">Blink</md-slide-toggle>
-  <md-slide-toggle class="flexed-slide" [disabled]="!currentModel?.hasTrunkFeature">Trunk</md-slide-toggle>
+  <md-slide-toggle class="flexed-slide" [disabled]="!currentModel?.hasTrunkFeature" [(ngModel)]="currentModel.trunkIsOpen">Trunk</md-slide-toggle>
 </footer>

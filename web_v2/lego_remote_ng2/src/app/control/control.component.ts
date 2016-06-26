@@ -93,8 +93,8 @@ export class CarControlComponent implements AfterViewInit {
 		
 		console.log("setting knob pos from values: speed=" + speedPercent + ", steering=" + steerPercent);
 		
-		this.model.setSteering(steerPercent);
-		this.model.setSpeed(speedPercent * -1);
+		this.model.steering = steerPercent;
+		this.model.speed = speedPercent * -1;
 	}
 	
 	setKnobPosFromTouch(touch : any) {
@@ -125,7 +125,7 @@ export class CarControlComponent implements AfterViewInit {
 		
 		console.log("setting knob pos from touch: speed=" + speed + ", steering=" + steer);
 		
-		this.model.setSteering(steer);
-		this.model.setSpeed(speed * -1);
+		this.model.steering = steer;
+		this.model.speed = speed * -1;
 	}
 }
