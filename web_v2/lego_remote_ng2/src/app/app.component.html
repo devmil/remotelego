@@ -1,7 +1,11 @@
 <md-toolbar color="primary">
   <span class="fill-space">LegoControl app</span>
-  <button md-raised-button color="accent" (click)="toggleConnectionStatus()">{{isConnected()?"DISCONNECT" :"CONNECT"}}</button>
+  <button *ngIf="!doesntSupportWebBluetooth" md-raised-button color="accent" (click)="toggleConnectionStatus()">{{isConnected()?"DISCONNECT" :"CONNECT"}}</button>
 </md-toolbar>
+<div *ngIf="doesntSupportWebBluetooth" style="align: center">
+  <div>WebBluetooth isn't available!</div>
+  <div><b>For Google Chrome:</b><br />Set the WebBluetooth flag to 'enabled': <br /> <span>chrome://flags/#enable-web-bluetooth</span></div>
+</div>
 <div class="control-container" *ngIf="currentModel">
   <car-control [model]="currentModel"></car-control>
 </div>

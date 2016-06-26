@@ -19,8 +19,11 @@ export class AppComponent {
   currentDevice: any = null;
   currentServer: any = null;
   currentModel: LegoCar = null;
+  doesntSupportWebBluetooth: boolean = false;
 
   constructor() {
+    var nav : any = navigator;
+    this.doesntSupportWebBluetooth = nav.bluetooth == undefined;
   }
 
   doConnect() {
