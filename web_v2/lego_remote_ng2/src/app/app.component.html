@@ -4,7 +4,7 @@
 </md-toolbar>
 <div *ngIf="doesntSupportWebBluetooth" style="align: center">
   <div>WebBluetooth isn't available!</div>
-  <div><b>For Google Chrome:</b><br />Set the WebBluetooth flag to 'enabled': <br /> <span>chrome://flags/#enable-web-bluetooth</span></div>
+  <div><b>For Google Chrome:</b><br />Set the WebBluetooth flag to 'enabled': <br /> <code>chrome://flags/#enable-web-bluetooth</code></div>
 </div>
 <div class="control-container" *ngIf="currentModel">
   <car-control [model]="currentModel"></car-control>
