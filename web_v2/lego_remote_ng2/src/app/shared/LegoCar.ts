@@ -1,10 +1,7 @@
+import { Protocol, BlinkMode, FrontLightState, TrunkState } from './Protocol';
+
 export class LegoCar {
 
-    static SPEED_CHARACTERISTIC_UUID : string = "8d8ba32b-96be-4590-910b-c756c5222c9f";
-	static STEER_CHARACTERISTIC_UUID : string = "7baf8dca-2bfc-47fb-af29-042fccc180eb";
-    static TRUNK_CHARACTERISTIC_UUID : string = "e0af3340-022e-47e1-a263-d68887dc41d4";
-    static FRONT_LIGHT_CHARACTERISTIC_UUID : string = "fa10e4de-259e-4d23-9f59-45a9c66802ca";
-    static BLINK_CHARACTERISTIC_UUID : string = "aad03b81-f2ea-47db-ae1e-7c2f9e86e93e";
 
     private m_server : any;
     private m_service : any;
@@ -18,6 +15,8 @@ export class LegoCar {
 	private m_lastSentTrunkIsOpen : boolean;
 	private m_frontLightIsEnabled : boolean;
 	private m_lastSentFrontLightIsEnabled : boolean;
+    private m_blinkMode : BlinkMode;
+    private m_lastSentBlinkMode : BlinkMode = BlinkMode.Off;
 
     private m_isInitialized : boolean = false;
     private m_hasTrunkFeature : boolean = false;
@@ -34,15 +33,15 @@ export class LegoCar {
 
     public initData() {
         Promise.all( [
-            this.m_service.getCharacteristic(LegoCar.TRUNK_CHARACTERISTIC_UUID)
+            this.m_service.getCharacteristic(Protocol.TRUNK_CHARACTERISTIC_UUID)
             .then((characteristic) => { this.m_hasTrunkFeature = true; })
             .catch((e) => { this.m_hasTrunkFeature = false; }),
 
-            this.m_service.getCharacteristic(LegoCar.FRONT_LIGHT_CHARACTERISTIC_UUID)
+            this.m_service.getCharacteristic(Protocol.FRONT_LIGHT_CHARACTERISTIC_UUID)
             .then((characteristic) => { this.m_hasFrontLightFeature = true; })
             .catch((e) => { this.m_hasFrontLightFeature = false; }),
 
-            this.m_service.getCharacteristic(LegoCar.BLINK_CHARACTERISTIC_UUID)
+            this.m_service.getCharacteristic(Protocol.BLINK_CHARACTERISTIC_UUID)
             .then((characteristic) => { this.m_hasBlinkFeature = true; })
             .catch((e) => { this.m_hasBlinkFeature = false; })
         ])
@@ -97,6 +96,15 @@ export class LegoCar {
 		this.transmitData();
     }
 
+    public get blinkMode() : BlinkMode {
+        return this.m_blinkMode;
+    }
+
+    public set blinkMode(blinkMode : BlinkMode) {
+        this.m_blinkMode = blinkMode;
+        this.transmitData();
+    }
+
     private updateIfDirty() {
 		if(this.isDirty() && this.m_server.connected) {
 			window.setTimeout(() => { this.transmitData(); }, 0);
@@ -122,7 +130,8 @@ export class LegoCar {
         return this.m_lastSentSpeed !== this.speed
 			|| this.m_lastSentSteering !== this.steering
 			|| this.m_lastSentTrunkIsOpen !== this.trunkIsOpen
-			|| this.m_lastSentFrontLightIsEnabled !== this.frontLightIsEnabled;
+			|| this.m_lastSentFrontLightIsEnabled !== this.frontLightIsEnabled
+            || this.m_lastSentBlinkMode != this.blinkMode;
     }
 
     private transmitData() {
@@ -141,10 +150,11 @@ export class LegoCar {
         var l_speed = this.speed;
         var l_trunkIsOpen = this.trunkIsOpen;
         var l_frontLightIsEnabled = this.frontLightIsEnabled
+        var l_blinkMode = this.blinkMode;
 
         Promise.all([
             this.transmitDataPromise(
-                LegoCar.STEER_CHARACTERISTIC_UUID,
+                Protocol.STEER_CHARACTERISTIC_UUID,
                 () => { return l_steering != this.m_lastSentSteering; },
                 () => {  
 					var angle = (l_steering * 90) / 100;
@@ -162,7 +172,7 @@ export class LegoCar {
                 }),
 
             this.transmitDataPromise(
-                LegoCar.SPEED_CHARACTERISTIC_UUID,
+                Protocol.SPEED_CHARACTERISTIC_UUID,
                 () => { return l_speed != this.m_lastSentSpeed; },
                 () => {  
 					var speedData = new Uint8Array(1);
@@ -178,11 +188,11 @@ export class LegoCar {
                 }),
                 
             this.transmitDataPromise(
-                LegoCar.TRUNK_CHARACTERISTIC_UUID,
+                Protocol.TRUNK_CHARACTERISTIC_UUID,
                 () => { return this.hasTrunkFeature && l_trunkIsOpen != this.m_lastSentTrunkIsOpen; },
                 () => {  
 					var trunkData = new Uint8Array(1);
-					trunkData[0] = l_trunkIsOpen ? 2 : 1;
+					trunkData[0] = l_trunkIsOpen ? TrunkState.Open : TrunkState.Closed;
 					
 					console.log("Sending trunk state (" + l_trunkIsOpen + ")");
 
@@ -194,11 +204,11 @@ export class LegoCar {
                 }),
 
             this.transmitDataPromise(
-                LegoCar.FRONT_LIGHT_CHARACTERISTIC_UUID,
+                Protocol.FRONT_LIGHT_CHARACTERISTIC_UUID,
                 () => { return this.hasFrontLightFeature && l_frontLightIsEnabled != this.m_lastSentFrontLightIsEnabled; },
                 () => {  
 					var frontLightData = new Uint8Array(1);
-					frontLightData[0] = l_frontLightIsEnabled ? 2 : 1;
+					frontLightData[0] = l_frontLightIsEnabled ? FrontLightState.Active : FrontLightState.Hidden;
 					
 					console.log("Sending front light state (" + l_frontLightIsEnabled + ")");
                     return frontLightData;
@@ -208,7 +218,20 @@ export class LegoCar {
 					console.log("Sent front light state (" + l_frontLightIsEnabled + ")");
                 }),
 
-                //TODO: blink
+            this.transmitDataPromise(
+                Protocol.BLINK_CHARACTERISTIC_UUID,
+                () => { return this.hasBlinkFeature && l_blinkMode != this.m_lastSentBlinkMode; },
+                () => {  
+					var blinkModeData = new Uint8Array(1);
+					blinkModeData[0] = l_blinkMode;
+					
+					console.log("Sending blink mode (" + l_blinkMode + ")");
+                    return blinkModeData;
+                },
+                () => {
+                    this.m_lastSentBlinkMode = l_blinkMode;
+					console.log("Sent blink mode (" + l_blinkMode + ")");
+                }),
         ])
         .catch(() => {
         })
