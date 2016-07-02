@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "BlinkControl.hpp"
+#include "ICarProfile.hpp"
 
 enum class LightState {
   Off = 0,
@@ -58,8 +59,9 @@ public:
 
   void loop();
 
-  void init();
+  void init(ICarProfile* carProfile);
 private:
+  ICarProfile* m_carProfile;
   int8_t m_speedPercent;
   int8_t m_steeringDegrees;
   LightState m_lightState;

@@ -1,7 +1,7 @@
 #include "BLECommunication.h"
 
-void BLE_configure(LegoCarModel& model) {
-  Bluetooth::addService(std::make_shared<LegoCarService>(model));
+void BLE_configure(LegoCarModel& model, ICarProfile* carProfile) {
+  Bluetooth::addService(std::make_shared<LegoCarService>(model, carProfile));
   Bluetooth::setDeviceConnectedCallback([&](BLEStatus_t s, uint16_t h) {
         switch (s){
           case BLE_STATUS_OK:
@@ -18,7 +18,7 @@ void BLE_configure(LegoCarModel& model) {
       model.stopAll();
       model.setCarState(CarState::Ready);
     });
-  Bluetooth::init(BLE_DEVICE_NAME);
+  Bluetooth::init(carProfile->getDeviceName());
 
   Bluetooth::advertiseServices();
 

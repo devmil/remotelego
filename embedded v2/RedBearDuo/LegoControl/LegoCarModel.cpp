@@ -6,6 +6,7 @@
 const String EDDYSTONE_URL = "https://goo.gl/WIVbnM";
 
 LegoCarModel::LegoCarModel() {
+  m_carProfile = 0;
   m_speedPercent = 0;
   m_steeringDegrees = 0;
   m_lightState = LightState::Normal;
@@ -47,6 +48,14 @@ int8_t LegoCarModel::getSteeringDegrees() {
 }
 
 void LegoCarModel::setSteeringDegrees(int8_t degrees) {
+  if(m_carProfile->getSteeringDirection() == SteeringDirection::Mode2) {
+    degrees *= -1;
+  }
+  if(degrees > m_carProfile->getMaxSteeringPercentPositive()) {
+    degrees = m_carProfile->getMaxSteeringPercentPositive();
+  } else if(degrees < m_carProfile->getMaxSteeringPercentNegative()) {
+    degrees = m_carProfile->getMaxSteeringPercentNegative();
+  }
   m_steeringDegrees = degrees;
   AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(degrees));
 }
@@ -85,7 +94,8 @@ void LegoCarModel::loop() {
   }
 }
 
-void LegoCarModel::init() {
+void LegoCarModel::init(ICarProfile* carProfile) {
+  m_carProfile = carProfile;
   m_blinkControl.init();
   BLENano::init();
 }
@@ -148,7 +158,7 @@ void LegoCarModel::setTrunkState(TrunkState trunkState) {
     timeoutMilliseconds = 2000;
     direction = 0;
   } else if(trunkState == TrunkState::Open) {
-    timeoutMilliseconds = 2500;
+    timeoutMilliseconds = 3000;
     direction = 1;
   }
 

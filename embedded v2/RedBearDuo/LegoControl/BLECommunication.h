@@ -4,10 +4,9 @@
 #include "Bluetooth.hpp"
 
 #include "LegoCarModel.hpp"
+#include "ICarProfile.hpp"
 
-//BLE configuration data
-#define BLE_DEVICE_NAME                         "Lego RC"
-#define EDDYSTONE_URL                           "www.google.de";
+#include <vector>
 
 class SpeedCharacteristic : public BluetoothCharacteristic {
 public:
@@ -159,18 +158,38 @@ private:
   LegoCarModel& m_model;
 };
 
+template <typename T>
+bool contains(std::vector<T> container, T item) {
+  for(const auto& i : container) {
+    if(i == item) {
+      return true;
+    }
+  }
+  return false;
+}
+
 class LegoCarService : public BluetoothService {
 public:
-  LegoCarService(LegoCarModel& model) 
+  LegoCarService(LegoCarModel& model, ICarProfile* carProfile) 
   : BluetoothService(String("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
+    
     addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
     addCharacteristic(std::make_shared<SteerCharacteristic>(model));
-    addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
-    addCharacteristic(std::make_shared<MovableFrontLightCharacteristic>(model));
-    addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
+
+    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::Trunk)) {
+      addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
+    }
+    
+    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::MovingFrontLight)) {
+      addCharacteristic(std::make_shared<MovableFrontLightCharacteristic>(model));
+    }
+    
+    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::Blink)) {
+      addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
+    }
   }
 };
 
-void BLE_configure(LegoCarModel& model);
+void BLE_configure(LegoCarModel& model, ICarProfile* carProfile);
 
 #endif

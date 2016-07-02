@@ -7,6 +7,9 @@ SYSTEM_MODE(MANUAL);//do not connect to cloud
 #include "BLECommunication.h"
 #include "NANOCommunication.h"
 #include "LegoCarModel.hpp"
+#include "ICarProfile.hpp"
+#include "RacingJeepProfile.hpp"
+#include "DumperProfile.hpp"
 
 int led = D7; 
 
@@ -16,6 +19,7 @@ uint8_t s_state = 0;
 
 uint64_t s_lastLowFrequencyActionMillis = 0;
 LegoCarModel s_carModel;
+ICarProfile* s_carProfile;
 
 void setup() {
   pinMode(led, OUTPUT);
@@ -24,19 +28,23 @@ void setup() {
   while(!Serial) {
     delay(10);
   }
+
+  s_carProfile = new RacingJeepProfile();
+  //s_carProfile = new DumperProfile();
+
   Serial.println("LegoControl: start");
 
   Serial.println("LegoControl: init AVR communication");
   AVRProtocol::init();
 
   Serial.println("LegoControl: init BLE service");
-  BLE_configure(s_carModel);
+  BLE_configure(s_carModel, s_carProfile);
 
   Serial.println("LegoControl: init BLE Nano communication");
   BLENano::init();
 
   Serial.println("LegoControl: init Car model");
-  s_carModel.init();
+  s_carModel.init(s_carProfile);
 }
 
 
