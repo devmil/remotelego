@@ -20,7 +20,7 @@ class ICarProfile {
 public:
     virtual ~ICarProfile() {}
 
-    virtual SteeringDirection getSteeringDirection() = 0;
+    virtual bool invertSteering() = 0;
     virtual int8_t getMaxSteeringPercentPositive() = 0;
     virtual int8_t getMaxSteeringPercentNegative() = 0;
 

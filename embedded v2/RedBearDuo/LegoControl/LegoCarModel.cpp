@@ -48,7 +48,7 @@ int8_t LegoCarModel::getSteeringDegrees() {
 }
 
 void LegoCarModel::setSteeringDegrees(int8_t degrees) {
-  if(m_carProfile->getSteeringDirection() == SteeringDirection::Mode2) {
+  if(m_carProfile->invertSteering()) {
     degrees *= -1;
   }
   if(degrees > m_carProfile->getMaxSteeringPercentPositive()) {

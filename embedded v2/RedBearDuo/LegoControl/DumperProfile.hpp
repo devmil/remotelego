@@ -5,30 +5,17 @@
 
 class DumperProfile : public virtual ICarProfile {
 
-    ~DumperProfile() override {}
+    ~DumperProfile() override;
 
-    SteeringDirection getSteeringDirection() override {
-        return SteeringDirection::Mode2;
-    }
+    bool invertSteering() override;
 
-    int8_t getMaxSteeringPercentPositive() override {
-        return 40;
-    }
+    int8_t getMaxSteeringPercentPositive() override;
 
-    int8_t getMaxSteeringPercentNegative() override {
-        return -70;
-    }
+    int8_t getMaxSteeringPercentNegative() override;
 
-    std::vector<SupportedCarService> getSupportedCarServices() override {
-        return std::vector<SupportedCarService> {
-          SupportedCarService::Trunk
-        };
-    }
+    std::vector<SupportedCarService> getSupportedCarServices() override;
 
-    String getDeviceName() override {
-      return "Dumper";
-    }
-
+    String getDeviceName() override;
 };
 
 #endif

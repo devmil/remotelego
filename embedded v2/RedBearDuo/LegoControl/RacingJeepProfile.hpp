@@ -5,31 +5,17 @@
 
 class RacingJeepProfile : public virtual ICarProfile {
 
-    ~RacingJeepProfile() override {}
+    ~RacingJeepProfile() override;
 
-    SteeringDirection getSteeringDirection() override {
-        return SteeringDirection::Mode1;
-    }
+    bool invertSteering() override;
 
-    int8_t getMaxSteeringPercentPositive() override {
-        return 100;
-    }
+    int8_t getMaxSteeringPercentPositive() override;
 
-    int8_t getMaxSteeringPercentNegative() override {
-        return -100;
-    }
+    int8_t getMaxSteeringPercentNegative() override;
 
-    std::vector<SupportedCarService> getSupportedCarServices() override {
-        return std::vector<SupportedCarService> { 
-            SupportedCarService::MovingFrontLight, 
-            SupportedCarService::Trunk,
-            SupportedCarService::Blink
-        };
-    }
+    std::vector<SupportedCarService> getSupportedCarServices() override;
 
-    String getDeviceName() override {
-      return "RaceJeep";
-    }
+    String getDeviceName() override;
 };
 
 #endif
