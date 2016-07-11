@@ -107,8 +107,7 @@ Bluetooth::Bluetooth()
   m_deviceName(""),
   m_advParamsServices(),
   m_advDataServices(),
-  m_advParamsEddystone(),
-  m_advDataEddystone(),
+  m_scanResponseDataServices(),
   m_deviceConnectedCallback(0),
   m_deviceDisconnectedCallback(0),
   m_services() {
@@ -137,10 +136,6 @@ void Bluetooth::advertiseServices() {
   getInstance()->advertiseServices_internal();
 }
 
-void Bluetooth::advertiseEddystoneUrl(String url) {
-  getInstance()->advertiseEddystoneUrl_internal(url);
-}
-
 void Bluetooth::init_internal(String deviceName) {
   m_deviceName = deviceName;
   ble.init();
@@ -161,26 +156,15 @@ void Bluetooth::init_internal(String deviceName) {
       service->init();
   }
 
-  m_advParamsServices.adv_int_min = 0x00A0;
-  m_advParamsServices.adv_int_max = 0x01A0;
-  m_advParamsServices.adv_type    = 0;
-  m_advParamsServices.dir_addr_type = 0;
+  m_advParamsServices.adv_int_min = 0x0030;
+  m_advParamsServices.adv_int_max = 0x0030;
+  m_advParamsServices.adv_type    = BLE_GAP_ADV_TYPE_ADV_IND;
+  m_advParamsServices.dir_addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
   memset(m_advParamsServices.dir_addr,0,6);
-  m_advParamsServices.channel_map = 0x07;
-  m_advParamsServices.filter_policy = 0x00;
+  m_advParamsServices.channel_map = BLE_GAP_ADV_CHANNEL_MAP_ALL;
+  m_advParamsServices.filter_policy = BLE_GAP_ADV_FP_ANY;
 
   initServiceAdvertisingData(m_deviceName);
-
-  m_advParamsEddystone.adv_int_min = 0x00A0;
-  m_advParamsEddystone.adv_int_max = 0x01A0;
-  m_advParamsEddystone.adv_type    = 3; //Eddystone
-  m_advParamsEddystone.adv_type    = 0;
-  m_advParamsEddystone.dir_addr_type = 0;
-  memset(m_advParamsEddystone.dir_addr,0,6);
-  m_advParamsEddystone.channel_map = 0x07;
-  m_advParamsEddystone.filter_policy = 0x00;
-
-  initEddystoneAdvertisingData("");
 }
 
 void Bluetooth::setDeviceConnectedCallback_internal(DeviceConnectedCallback cb) {
@@ -196,19 +180,10 @@ void Bluetooth::addService_internal(BluetoothService::Ptr service) {
 }
 
 void Bluetooth::advertiseServices_internal() {
-  ble.setAdvParams(&m_advParamsServices);
+  ble.setAdvertisementParams(&m_advParamsServices);
 
-  ble.setAdvData(m_advDataServices.size(), &m_advDataServices[0]);
-
-  ble.startAdvertising();
-}
-
-void Bluetooth::advertiseEddystoneUrl_internal(String url) {
-  ble.setAdvParams(&m_advParamsEddystone);
-
-  initServiceAdvertisingData(m_deviceName);
-
-  ble.setAdvData(m_advDataEddystone.size(), &m_advDataEddystone[0]);    
+  ble.setAdvertisementData(m_advDataServices.size(), &m_advDataServices[0]);
+  ble.setScanResponseData(m_scanResponseDataServices.size(), &m_scanResponseDataServices[0]);
 
   ble.startAdvertising();
 }
@@ -220,21 +195,13 @@ Bluetooth::Ptr Bluetooth::getInstance() {
 
 void Bluetooth::initServiceAdvertisingData(String deviceName) {
   //Type=1, data=0x06
-  addAdvertisingDataByte(m_advDataServices, 0x01, 0x06);
+  addAdvertisingDataByte(m_advDataServices, BLE_GAP_AD_TYPE_FLAGS, BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
   //Type=8, Device name
-  addAdvertisingDataString(m_advDataServices, 0x08, deviceName);
+  addAdvertisingDataString(m_scanResponseDataServices, BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME, deviceName);
   //Type=6, Services
   if(m_services.size() >= 1) {
-    addAdvertisingDataInverted(m_advDataServices, 0x06, m_services[0]->getUUIDData());
+    addAdvertisingDataInverted(m_advDataServices, BLE_GAP_AD_TYPE_128BIT_SERVICE_UUID_COMPLETE, m_services[0]->getUUIDData());
   }
-}
-
-void Bluetooth::initEddystoneAdvertisingData(String eddystoneUrl) {
-  //Type=1, data=0x06
-  addAdvertisingDataByte(m_advDataEddystone, 0x01, 0x06);
-  std::vector<uint8_t> eddystoneHeaderData = { 0xAA, 0xFE };
-  addAdvertisingData(m_advDataEddystone, 0x03, eddystoneHeaderData);
-  addAdvertisingDataEddystone(m_advDataEddystone, 0x16, eddystoneUrl);
 }
 
 void Bluetooth::addAdvertisingDataByte(std::vector<uint8_t>& target, uint8_t type, uint8_t b) {
@@ -258,26 +225,6 @@ void Bluetooth::addAdvertisingDataInverted(std::vector<uint8_t>& target, uint8_t
   }
   addAdvertisingData(target, type, inverted);
 }
-
-void Bluetooth::addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_t type,  String url) {
-  std::vector<uint8_t> data;
-  data.push_back(0xAA); //Eddystone ID 1
-  data.push_back(0xFE); //Eddystone ID 2
-  data.push_back(0x10); //URL
-  data.push_back(0xEB); //power
-  data.push_back(0x02); //http
-
-  //TODO: detect http and remove
-
-  for(uint16_t i=0; i<url.length(); i++) {
-    if(data.size() <= 30) {
-      data.push_back(static_cast<uint8_t>(url.charAt(i)));
-    }
-  }
-
-  addAdvertisingData(target, type, data);  
-}
-
 
 void Bluetooth::addAdvertisingData(std::vector<uint8_t>& target, uint8_t type, std::vector<uint8_t> data) {
   uint16_t dataSize = data.size();

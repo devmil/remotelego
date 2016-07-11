@@ -73,15 +73,13 @@ public:
     static void setDeviceDisconnectedCallback(DeviceDisconnectedCallback cb);
     static void addService(BluetoothService::Ptr service);
     static void advertiseServices();
-    static void advertiseEddystoneUrl(String url);
 
 private:
     bool m_isInitialized;
     String m_deviceName;
     advParams_t m_advParamsServices;
     std::vector<uint8_t> m_advDataServices;
-    advParams_t m_advParamsEddystone;
-    std::vector<uint8_t> m_advDataEddystone;
+    std::vector<uint8_t> m_scanResponseDataServices;
     DeviceConnectedCallback m_deviceConnectedCallback;
     DeviceDisconnectedCallback m_deviceDisconnectedCallback;
     std::vector<BluetoothService::Ptr> m_services;
@@ -93,15 +91,12 @@ private:
     void setDeviceDisconnectedCallback_internal(DeviceDisconnectedCallback cb);
     void addService_internal(BluetoothService::Ptr service);
     void advertiseServices_internal();
-    void advertiseEddystoneUrl_internal(String url);
 
     void initServiceAdvertisingData(String deviceName);
-    void initEddystoneAdvertisingData(String eddystoneUrl);
 
     static void addAdvertisingDataByte(std::vector<uint8_t>& target, uint8_t type, uint8_t b);
     static void addAdvertisingDataString(std::vector<uint8_t>& target, uint8_t type, String str);
     static void addAdvertisingDataInverted(std::vector<uint8_t>& target, uint8_t type, std::vector<uint8_t> data);
-    static void addAdvertisingDataEddystone(std::vector<uint8_t>& target, uint8_t type,  String url);
     static void addAdvertisingData(std::vector<uint8_t>& target, uint8_t type, std::vector<uint8_t> data);
 
     //
