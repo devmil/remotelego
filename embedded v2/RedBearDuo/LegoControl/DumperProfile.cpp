@@ -7,18 +7,28 @@ bool DumperProfile::invertSteering() {
     return true;
 }
 
-int8_t DumperProfile::getMaxSteeringPercentPositive() {
+int8_t DumperProfile::getMaxSteeringAnglePositive() {
     return 40;
 }
 
-int8_t DumperProfile::getMaxSteeringPercentNegative() {
+int8_t DumperProfile::getMaxSteeringAngleNegative() {
     return -70;
 }
 
-std::vector<SupportedCarService> DumperProfile::getSupportedCarServices() {
-    return std::vector<SupportedCarService> {
-        SupportedCarService::Trunk
-    };
+int8_t DumperProfile::getSteeringOffsetAngle() {
+    return 0;
+}
+
+bool DumperProfile::hasMovingFrontLightsFeature() {
+    return false;
+}
+
+bool DumperProfile::hasTrunkFeature() {
+    return false;
+}
+
+bool DumperProfile::hasBlinkFeature() {
+    return true;
 }
 
 String DumperProfile::getDeviceName() {

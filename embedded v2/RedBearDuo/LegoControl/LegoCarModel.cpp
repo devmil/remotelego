@@ -9,10 +9,10 @@ LegoCarModel::LegoCarModel() {
   m_carProfile = 0;
   m_speedPercent = 0;
   m_steeringDegrees = 0;
-  m_lightState = LightState::Normal;
   m_trunkState = TrunkState::Unknown;
   m_mflState = MovableFrontLightState::Unknown;
   m_lightState = LightState::FogLight;
+  m_lowFreqLoopCounter = 0;
 }
 
 LegoCarModel::~LegoCarModel() {
@@ -32,14 +32,16 @@ void LegoCarModel::setMotorSpeedPercent(int8_t percent) {
     signAfter = percent / abs(percent);
   }
   
-  m_speedPercent = percent;
-  AVRProtocol::send(
-  { 
-    AVRCommandFactory::createMotorSpeedCommand(abs(percent)),
-    AVRCommandFactory::createMotorDirectionCommand(percent > 0) 
-  });
-  if(signBefore != signAfter) {
-    sendLightState();
+  if(m_speedPercent != percent) {
+    m_speedPercent = percent;
+    AVRProtocol::send(
+    { 
+      AVRCommandFactory::createMotorSpeedCommand(abs(percent)),
+      AVRCommandFactory::createMotorDirectionCommand(percent > 0) 
+    });
+    if(signBefore != signAfter) {
+      sendLightState();
+    }
   }
 }
 
@@ -51,13 +53,33 @@ void LegoCarModel::setSteeringDegrees(int8_t degrees) {
   if(m_carProfile->invertSteering()) {
     degrees *= -1;
   }
-  if(degrees > m_carProfile->getMaxSteeringPercentPositive()) {
-    degrees = m_carProfile->getMaxSteeringPercentPositive();
-  } else if(degrees < m_carProfile->getMaxSteeringPercentNegative()) {
-    degrees = m_carProfile->getMaxSteeringPercentNegative();
+
+  int8_t maxDegrees = m_carProfile->getMaxSteeringAnglePositive();
+  int8_t minDegrees = m_carProfile->getMaxSteeringAngleNegative();
+
+  //remove the offset on both sides
+  int8_t offset = m_carProfile->getSteeringOffsetAngle();
+  if(abs(offset) > (maxDegrees - minDegrees) / 2) {
+    offset = (offset / offset) * ((maxDegrees - minDegrees) / 2);
   }
-  m_steeringDegrees = degrees;
-  AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(degrees));
+  maxDegrees = maxDegrees - abs(offset);
+  minDegrees = minDegrees + abs(offset);
+  
+  if(degrees > maxDegrees) {
+    //TODO: scale
+    degrees = maxDegrees;
+  } else if(degrees < minDegrees) {
+    //TODO: scale
+    degrees = minDegrees;
+  }
+
+  degrees += offset;
+  
+  if(m_steeringDegrees != degrees) {
+    Serial.println("Steering: deg=" + String(degrees) + ", offset=" + String(offset) + ", max=" + String(maxDegrees) + ", min=" + String(minDegrees));
+    m_steeringDegrees = degrees;
+    AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(degrees));
+  }
 }
 
 LightState LegoCarModel::getLightState() {
@@ -87,10 +109,17 @@ void LegoCarModel::stopAll() {
 
 void LegoCarModel::loop() {
   m_blinkControl.loop();
-  if(m_carState == CarState::Ready) {
-    BLENano::ensureEddystoneUrl(EDDYSTONE_URL);
-  } else {
-    BLENano::ensureEddystoneUrl("");
+}
+
+void LegoCarModel::loopLowFrequency() {
+  m_lowFreqLoopCounter++;
+  if(m_lowFreqLoopCounter >= 4) { //ensure EddyStone every 2s
+    if(m_carState == CarState::Ready) {
+      BLENano::ensureEddystoneUrl(EDDYSTONE_URL);
+    } else {
+      BLENano::ensureEddystoneUrl("");
+    }  
+    m_lowFreqLoopCounter = 0;
   }
 }
 
@@ -98,6 +127,7 @@ void LegoCarModel::init(ICarProfile* carProfile) {
   m_carProfile = carProfile;
   m_blinkControl.init();
   BLENano::init();
+  setSteeringDegrees(0);
 }
 
 uint32_t LegoCarModel::getStateColor() {
@@ -124,7 +154,11 @@ void LegoCarModel::sendLightState() {
     if(m_lightState != LightState::Off) {
         ledsFrontOn = true;
         ledsBackOn = true;
-        ledsFogOn = m_lightState == LightState::FogLight && m_mflState == MovableFrontLightState::Active;
+
+        bool flActive = !m_carProfile->hasMovingFrontLightsFeature()
+                          || m_mflState == MovableFrontLightState::Active;
+
+        ledsFogOn = m_lightState == LightState::FogLight && flActive;
     }    
   }
 

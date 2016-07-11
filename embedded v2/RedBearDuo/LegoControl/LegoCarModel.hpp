@@ -58,6 +58,7 @@ public:
   void stopAll();
 
   void loop();
+  void loopLowFrequency();
 
   void init(ICarProfile* carProfile);
 private:
@@ -69,6 +70,8 @@ private:
   TrunkState m_trunkState;
   MovableFrontLightState m_mflState;
   BlinkControl m_blinkControl;
+
+  int8_t m_lowFreqLoopCounter;
 
   uint32_t getStateColor();
   void sendLightState();

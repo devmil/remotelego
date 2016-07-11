@@ -9,22 +9,19 @@ enum class SteeringDirection {
     Mode2
 };
 
-enum class SupportedCarService {
-    MovingFrontLight,
-    Trunk,
-    Blink
-};
-
 class ICarProfile {
 
 public:
     virtual ~ICarProfile() {}
 
     virtual bool invertSteering() = 0;
-    virtual int8_t getMaxSteeringPercentPositive() = 0;
-    virtual int8_t getMaxSteeringPercentNegative() = 0;
+    virtual int8_t getMaxSteeringAnglePositive() = 0;
+    virtual int8_t getMaxSteeringAngleNegative() = 0;
+    virtual int8_t getSteeringOffsetAngle() = 0;
 
-    virtual std::vector<SupportedCarService> getSupportedCarServices() = 0;
+    virtual bool hasMovingFrontLightsFeature() = 0;
+    virtual bool hasTrunkFeature() = 0;
+    virtual bool hasBlinkFeature() = 0;
 
     virtual String getDeviceName() = 0;
 };

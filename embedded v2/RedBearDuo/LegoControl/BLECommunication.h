@@ -158,16 +158,6 @@ private:
   LegoCarModel& m_model;
 };
 
-template <typename T>
-bool contains(std::vector<T> container, T item) {
-  for(const auto& i : container) {
-    if(i == item) {
-      return true;
-    }
-  }
-  return false;
-}
-
 class LegoCarService : public BluetoothService {
 public:
   LegoCarService(LegoCarModel& model, ICarProfile* carProfile) 
@@ -176,15 +166,15 @@ public:
     addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
     addCharacteristic(std::make_shared<SteerCharacteristic>(model));
 
-    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::Trunk)) {
+    if(carProfile->hasTrunkFeature()) {
       addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
     }
     
-    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::MovingFrontLight)) {
+    if(carProfile->hasMovingFrontLightsFeature()) {
       addCharacteristic(std::make_shared<MovableFrontLightCharacteristic>(model));
     }
     
-    if(contains(carProfile->getSupportedCarServices(), SupportedCarService::Blink)) {
+    if(carProfile->hasBlinkFeature()) {
       addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
     }
   }

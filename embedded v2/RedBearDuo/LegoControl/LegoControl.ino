@@ -1,5 +1,5 @@
-//RedBearDuo Arduino Board Plugin v 0.2.7
-//RedBearDuo Firmware v 0.2.3
+//RedBearDuo Arduino Board Plugin v 0.2.9
+//RedBearDuo Firmware v 0.2.4
 
 SYSTEM_MODE(MANUAL);//do not connect to cloud
 
@@ -8,6 +8,7 @@ SYSTEM_MODE(MANUAL);//do not connect to cloud
 #include "NANOCommunication.h"
 #include "LegoCarModel.hpp"
 #include "ICarProfile.hpp"
+#include "RacingTruckProfile.hpp"
 #include "RacingJeepProfile.hpp"
 #include "DumperProfile.hpp"
 
@@ -29,7 +30,8 @@ void setup() {
     delay(10);
   }
 
-  s_carProfile = new RacingJeepProfile();
+  s_carProfile = new RacingTruckProfile();
+  //s_carProfile = new RacingJeepProfile();
   //s_carProfile = new DumperProfile();
 
   Serial.println("LegoControl: start");
@@ -57,6 +59,7 @@ void loop() {
     } else {
       digitalWrite(led, LOW);
     }
+    s_carModel.loopLowFrequency();
   
     s_state++;
     s_lastLowFrequencyActionMillis = currentMillis;
