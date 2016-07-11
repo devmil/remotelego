@@ -23,6 +23,7 @@
 - Pololu 5V, 600mA Step-Down Voltage Regulator (D24V6F5) (6€)
 - Pololu Single Brushed Motor Driver Carrier (DRV8801) (Main motor) (6€)
 - Sparkfun Dual Motor Driver 1A TB6612FNG (9€)
+- 14,745 MHz quartz
 - 2x 100nF capacitor
 - 15x SMD resistors (470 Ohm)
 - a bunch of pin headers (male/female)
