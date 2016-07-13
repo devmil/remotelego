@@ -3,6 +3,10 @@
 AVRCommandData AVRCommandFactory::createPingCommand() {
   return AVRCommandData("pp", "");
 }
+AVRCommandData AVRCommandFactory::createSetSteeringOffsetCommand(int8_t offsetAngle) {
+  uint8_t percent = static_cast<uint8_t>(((offsetAngle) * 100) / 180);
+  return AVRCommandData("sso", String(percent));
+}
 AVRCommandData AVRCommandFactory::createMotorSpeedCommand(uint8_t speedPercent) {
   return AVRCommandData("ms", String(speedPercent));
 }
@@ -10,7 +14,7 @@ AVRCommandData AVRCommandFactory::createMotorDirectionCommand(bool isForward) {
   return AVRCommandData("md", isForward ? "1" : "0");
 }
 AVRCommandData AVRCommandFactory::createServoAngleCommand(float angle) {
-    uint8_t percent = static_cast<uint8_t>(((angle + 90) * 100) / 180); //-90 - 90 => 0 - 100
+  uint8_t percent = static_cast<uint8_t>(((angle + 90) * 100) / 180); //-90 - 90 => 0 - 100
   return AVRCommandData("sp", String(percent));
 }
 

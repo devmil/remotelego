@@ -8,11 +8,11 @@ bool RacingJeepProfile::invertSteering() {
 }
 
 int8_t RacingJeepProfile::getMaxSteeringAnglePositive() {
-    return 100;
+    return 90;
 }
 
 int8_t RacingJeepProfile::getMaxSteeringAngleNegative() {
-    return -100;
+    return -90;
 }
 
 int8_t RacingJeepProfile::getSteeringOffsetAngle() {

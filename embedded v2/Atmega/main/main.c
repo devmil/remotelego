@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>	// include interrupt support
 #include <avr/wdt.h>
+#include <avr/eeprom.h>
 #include <util/delay.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +70,8 @@ D_PIN(MAIN_DIR1,       D, 6)  /* -|                          |- */ D_PIN(FEATURE
 //Commands
 const char* COMMAND_PING 						= "pp";
 
+const char* COMMAND_STEERING_OFFSET_PERCENT		= "sso";
+
 const char* COMMAND_SERVO_PERCENT 				= "sp";
 
 const char* COMMAND_MOTOR_SPEED 				= "ms";
@@ -95,8 +98,14 @@ const char* COMMAND_FEAT2_MOTOR_DIRECTION		= "fm2d";
 const char* COMMAND_FEAT2_MOTOR_TIMEOUT_S		= "fm2ts";
 const char* COMMAND_FEAT2_MOTOR_TIMEOUT_MS		= "fm2tms";
 
+uint8_t* EEPROM_ADDR_SERVO_OFFSET		= 0;
+
+int8_t s_servoOffsetPercent;
+int8_t s_servoPercent;
 
 void Servo_setPercent(float percent) {
+	s_servoPercent = percent;
+	percent += s_servoOffsetPercent;
 	if(percent > 100) {
 		percent = 100;
 	}
@@ -116,6 +125,11 @@ void Servo_init() {
 	TCCR0 |= (1<<COM01);					// compare output mode
 	TCCR0 |= (1<<COM00);					// non inverted PWM
 	TCCR0 |= SERVO_PRESCALER_BITS;
+
+	s_servoOffsetPercent = eeprom_read_byte(EEPROM_ADDR_SERVO_OFFSET);
+	if(s_servoOffsetPercent > 45 || s_servoOffsetPercent < -45) {
+		s_servoOffsetPercent = 0;
+	}
 
 	Servo_setPercent(50);					//center servo	
 }
@@ -216,6 +230,14 @@ uint8_t s_inCommand = 0;
 uint8_t handleCommand(char* command, char* value) {
 	uint8_t result = 0;
 	if(strcmp(command, COMMAND_PING) == 0) {
+		result = 1;
+	} else if(strcmp(command, COMMAND_STEERING_OFFSET_PERCENT) == 0) {
+		int8_t newServoOffset = atoi(value);
+		if(s_servoOffsetPercent != newServoOffset) {
+		  s_servoOffsetPercent = newServoOffset;
+		  eeprom_write_byte(EEPROM_ADDR_SERVO_OFFSET, s_servoOffsetPercent);
+		  Servo_setPercent(s_servoPercent);
+		}
 		result = 1;
 	} else if(strcmp(command, COMMAND_MOTOR_SPEED) == 0) {
 		double doubleVal = atof(value);

@@ -54,13 +54,16 @@ void LegoCarModel::setSteeringDegrees(int8_t degrees) {
     degrees *= -1;
   }
 
-  int8_t maxDegrees = m_carProfile->getMaxSteeringAnglePositive();
+//Offset is now handled directly by the AVR and gets send initially
+/*  int8_t maxDegrees = m_carProfile->getMaxSteeringAnglePositive();
   int8_t minDegrees = m_carProfile->getMaxSteeringAngleNegative();
 
   //remove the offset on both sides
   int8_t offset = m_carProfile->getSteeringOffsetAngle();
-  if(abs(offset) > (maxDegrees - minDegrees) / 2) {
-    offset = (offset / offset) * ((maxDegrees - minDegrees) / 2);
+  int8_t maxOffset = (maxDegrees - minDegrees) / 2;
+  int8_t offsetSign = offset / offset;
+  if(abs(offset) > maxOffset) {
+    offset = offsetSign * maxOffset;
   }
   maxDegrees = maxDegrees - abs(offset);
   minDegrees = minDegrees + abs(offset);
@@ -73,10 +76,10 @@ void LegoCarModel::setSteeringDegrees(int8_t degrees) {
     degrees = minDegrees;
   }
 
-  degrees += offset;
+  degrees += offset;*/
   
   if(m_steeringDegrees != degrees) {
-    Serial.println("Steering: deg=" + String(degrees) + ", offset=" + String(offset) + ", max=" + String(maxDegrees) + ", min=" + String(minDegrees));
+    //Serial.println("Steering: deg=" + String(degrees) + ", offset=" + String(offset) + ", max=" + String(maxDegrees) + ", min=" + String(minDegrees));
     m_steeringDegrees = degrees;
     AVRProtocol::send(AVRCommandFactory::createServoAngleCommand(degrees));
   }
@@ -127,6 +130,7 @@ void LegoCarModel::init(ICarProfile* carProfile) {
   m_carProfile = carProfile;
   m_blinkControl.init();
   BLENano::init();
+  AVRProtocol::send(AVRCommandFactory::createSetSteeringOffsetCommand(m_carProfile->getSteeringOffsetAngle()));
   setSteeringDegrees(0);
 }
 

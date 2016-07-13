@@ -4,7 +4,7 @@
 
 void BLENano::init() {
   Serial2.begin(115200);
-  Serial2.setTimeout(300);
+  Serial2.setTimeout(50);
   while(!Serial2) {
     ;
   }

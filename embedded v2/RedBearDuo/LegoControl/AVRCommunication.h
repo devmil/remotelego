@@ -24,6 +24,7 @@ enum class Position {
 class AVRCommandFactory {
 public:
   static AVRCommandData createPingCommand();
+  static AVRCommandData createSetSteeringOffsetCommand(int8_t offsetAngle);
   static AVRCommandData createMotorSpeedCommand(uint8_t speedPercent);
   static AVRCommandData createMotorDirectionCommand(bool isForward);
   static AVRCommandData createServoAngleCommand(float angle);

@@ -8,15 +8,15 @@ bool RacingTruckProfile::invertSteering() {
 }
 
 int8_t RacingTruckProfile::getMaxSteeringAnglePositive() {
-    return 100;
+    return 90;
 }
 
 int8_t RacingTruckProfile::getMaxSteeringAngleNegative() {
-    return -100;
+    return -90;
 }
 
 int8_t RacingTruckProfile::getSteeringOffsetAngle() {
-    return 40;
+    return 10;
 }
 
 bool RacingTruckProfile::hasMovingFrontLightsFeature() {
