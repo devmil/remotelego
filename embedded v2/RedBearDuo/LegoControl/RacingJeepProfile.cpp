@@ -16,7 +16,7 @@ int8_t RacingJeepProfile::getMaxSteeringAngleNegative() {
 }
 
 int8_t RacingJeepProfile::getSteeringOffsetAngle() {
-    return 0;
+    return 10;
 }
 
 bool RacingJeepProfile::hasMovingFrontLightsFeature() {

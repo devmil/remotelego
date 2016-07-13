@@ -30,7 +30,8 @@ void setup() {
     delay(10);
   }
 
-  s_carProfile = new RacingTruckProfile();
+choose s_carProfile!
+  //s_carProfile = new RacingTruckProfile();
   //s_carProfile = new RacingJeepProfile();
   //s_carProfile = new DumperProfile();
 
