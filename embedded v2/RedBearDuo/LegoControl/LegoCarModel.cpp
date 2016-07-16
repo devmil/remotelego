@@ -54,30 +54,6 @@ void LegoCarModel::setSteeringDegrees(int8_t degrees) {
     degrees *= -1;
   }
 
-//Offset is now handled directly by the AVR and gets send initially
-/*  int8_t maxDegrees = m_carProfile->getMaxSteeringAnglePositive();
-  int8_t minDegrees = m_carProfile->getMaxSteeringAngleNegative();
-
-  //remove the offset on both sides
-  int8_t offset = m_carProfile->getSteeringOffsetAngle();
-  int8_t maxOffset = (maxDegrees - minDegrees) / 2;
-  int8_t offsetSign = offset / offset;
-  if(abs(offset) > maxOffset) {
-    offset = offsetSign * maxOffset;
-  }
-  maxDegrees = maxDegrees - abs(offset);
-  minDegrees = minDegrees + abs(offset);
-  
-  if(degrees > maxDegrees) {
-    //TODO: scale
-    degrees = maxDegrees;
-  } else if(degrees < minDegrees) {
-    //TODO: scale
-    degrees = minDegrees;
-  }
-
-  degrees += offset;*/
-  
   if(m_steeringDegrees != degrees) {
     //Serial.println("Steering: deg=" + String(degrees) + ", offset=" + String(offset) + ", max=" + String(maxDegrees) + ", min=" + String(minDegrees));
     m_steeringDegrees = degrees;
