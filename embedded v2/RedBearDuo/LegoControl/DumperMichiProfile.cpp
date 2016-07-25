@@ -8,15 +8,15 @@ bool DumperMichiProfile::invertSteering() {
 }
 
 int8_t DumperMichiProfile::getMaxSteeringAnglePositive() {
-    return 70;
+    return 60;
 }
 
 int8_t DumperMichiProfile::getMaxSteeringAngleNegative() {
-    return -70;
+    return -50;
 }
 
 int8_t DumperMichiProfile::getSteeringOffsetAngle() {
-    return 0;
+    return 10;
 }
 
 bool DumperMichiProfile::hasMovingFrontLightsFeature() {

@@ -54,6 +54,13 @@ void LegoCarModel::setSteeringDegrees(int8_t degrees) {
     degrees *= -1;
   }
 
+  if(degrees < m_carProfile->getMaxSteeringAngleNegative()) {
+    degrees = m_carProfile->getMaxSteeringAngleNegative();
+  }
+  if(degrees > m_carProfile->getMaxSteeringAnglePositive()) {
+    degrees = m_carProfile->getMaxSteeringAnglePositive();
+  }
+
   if(m_steeringDegrees != degrees) {
     //Serial.println("Steering: deg=" + String(degrees) + ", offset=" + String(offset) + ", max=" + String(maxDegrees) + ", min=" + String(minDegrees));
     m_steeringDegrees = degrees;
