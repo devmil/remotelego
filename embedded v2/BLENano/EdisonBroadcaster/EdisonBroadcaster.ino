@@ -1,3 +1,4 @@
+//Board version 1.0.5
 #include <BLE_API.h>
 
 BLEDevice ble;

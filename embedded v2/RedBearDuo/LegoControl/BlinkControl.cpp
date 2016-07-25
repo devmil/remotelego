@@ -1,6 +1,6 @@
 #include "BlinkControl.hpp"
 
-#include "AVRCommunication.h"
+#include "AVRCommunication.hpp"
 
 BlinkControl::BlinkControl() {
   m_isInitialized = false;

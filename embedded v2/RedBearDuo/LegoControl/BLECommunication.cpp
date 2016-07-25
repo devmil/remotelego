@@ -1,4 +1,4 @@
-#include "BLECommunication.h"
+#include "BLECommunication.hpp"
 
 void BLE_configure(LegoCarModel& model, ICarProfile* carProfile) {
   Bluetooth::addService(std::make_shared<LegoCarService>(model, carProfile));

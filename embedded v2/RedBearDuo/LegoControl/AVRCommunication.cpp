@@ -1,4 +1,4 @@
-#include "AVRCommunication.h"
+#include "AVRCommunication.hpp"
 
 AVRCommandData AVRCommandFactory::createPingCommand() {
   return AVRCommandData("pp", "");

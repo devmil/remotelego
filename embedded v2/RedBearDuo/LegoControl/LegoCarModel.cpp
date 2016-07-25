@@ -1,7 +1,7 @@
 #include "LegoCarModel.hpp"
 
-#include "AVRCommunication.h"
-#include "NANOCommunication.h"
+#include "AVRCommunication.hpp"
+#include "NANOCommunication.hpp"
 
 const String EDDYSTONE_URL = "https://goo.gl/WIVbnM";
 

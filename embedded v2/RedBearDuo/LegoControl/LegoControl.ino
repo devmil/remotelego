@@ -3,14 +3,15 @@
 
 SYSTEM_MODE(MANUAL);//do not connect to cloud
 
-#include "AVRCommunication.h"
-#include "BLECommunication.h"
-#include "NANOCommunication.h"
+#include "AVRCommunication.hpp"
+#include "BLECommunication.hpp"
+#include "NANOCommunication.hpp"
 #include "LegoCarModel.hpp"
 #include "ICarProfile.hpp"
 #include "RacingTruckProfile.hpp"
 #include "RacingJeepProfile.hpp"
-#include "DumperProfile.hpp"
+#include "DumperFloProfile.hpp"
+#include "DumperMichiProfile.hpp"
 
 int led = D7; 
 
@@ -33,7 +34,8 @@ void setup() {
 choose s_carProfile!
   //s_carProfile = new RacingTruckProfile();
   //s_carProfile = new RacingJeepProfile();
-  //s_carProfile = new DumperProfile();
+  //s_carProfile = new DumperFloProfile();
+  //s_carProfile = new DumperMichiProfile();
 
   Serial.println("LegoControl: start");
 

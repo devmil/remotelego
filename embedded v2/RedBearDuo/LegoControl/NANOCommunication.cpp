@@ -1,4 +1,4 @@
-#include "NANOCommunication.h"
+#include "NANOCommunication.hpp"
 
 #include <vector>
 

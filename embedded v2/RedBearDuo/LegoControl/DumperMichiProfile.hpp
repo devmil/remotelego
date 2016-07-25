@@ -1,11 +1,11 @@
-#ifndef DUMPERPROFILE_HPP
-#define DUMPERPROFILE_HPP
+#ifndef DumperMichiProfile_HPP
+#define DumperMichiProfile_HPP
 
 #include "ICarProfile.hpp"
 
-class DumperProfile : public virtual ICarProfile {
+class DumperMichiProfile : public virtual ICarProfile {
 
-    ~DumperProfile() override;
+    ~DumperMichiProfile() override;
 
     bool invertSteering() override;
 
