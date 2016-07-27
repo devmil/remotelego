@@ -1,4 +1,4 @@
-//RedBearDuo Arduino Board Plugin v 0.2.9
+//RedBearDuo Arduino Board Plugin v 0.2.10
 //RedBearDuo Firmware v 0.2.4
 
 SYSTEM_MODE(MANUAL);//do not connect to cloud
