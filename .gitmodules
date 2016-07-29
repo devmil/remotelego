@@ -1,0 +1,3 @@
+[submodule "webApp"]
+	path = webApp
+	url = https://github.com/devmil/remotelego_app.git
