@@ -4,11 +4,6 @@
 #include <vector>
 #include "Arduino.h"
 
-enum class SteeringDirection {
-    Mode1,
-    Mode2
-};
-
 class ICarProfile {
 
 public:
