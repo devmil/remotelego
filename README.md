@@ -21,7 +21,7 @@ The WebApp is hosted in a separate Repository as the distributed version gets ho
 After preparing your model you want to control and after creating a Mainboard (either by using a pre-made PCB or a hole PCB) you can start off putting software onto your controllers.
 Please refer to each components ReadMe to get a compile and flash guide:
 - [ATMega32](embedded/Atmega/README.md)
-- [RedBear DUO](embedded/ReadBearDuo/README.md)
+- [RedBear DUO](embedded/RedBearDuo/README.md)
 - [BLE Nano](embedded/BLENano/README.md)
 
 For testing you can either use the WebApp (if you have an Android 6 device with Chrome and set it up correctly) or (more easier to set up) use the [Android app](android/README.md)
