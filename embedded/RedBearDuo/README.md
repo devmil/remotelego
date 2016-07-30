@@ -18,24 +18,32 @@ After you have set up the environment and installed the correct firmware version
 
 ## Inner workings
 The RedBear Duo code consists of
+
 1. The LegoControl.ino file
 This file is only used as an entry point. The system initialization is triggered there and the main cycle gets distributed. All other files are C++ files.
+
 2. AVRCommunication.
 This module encapsulates all communication logic with the AVR. It exposes the available commands via CommandData factory methods so that no other module has to know the inner structure of these commands. It also handles the serial protocol used to communicate with the AVR.
+
 3. BLECommunication
 This module contains the GATT service configuration and the implementation of the Service and the Characteristics. Here the Link between the Bluetooth communication and the model is made.
+
 4. BlinkControl
 This module handles the Blink logic. It controls the central Blink timer and triggers a re-send of the AVR telegrams
+
 5. Bluetooth
 This modules creates an abstraction layer on top of the Bluetooth API provided by RedBear. It works with Service and Characteristic classes, handles the advertisement bytes and routes read/write requests to the correct characteristic instance.
+
 6. LegoCarModel
 The LegoCarModel is the heart of the car. It contains all the business logic and contains the current car state. Any changes made to the state of the model get translated into according AVR telegrams and get sent to the Mainboard.
+
 7. NanoCommunication
 This module encapsulates the communication with the BLW Nano. It basically sends the Eddystone URI to the BLE Nano (or better: ensures that the current URI is transmitted to the BLE Nano). It does so cyclic as the protocol isn't as strict as with the AVRCommunication so that the timeouts are smaller and therefore a immediate transmittion can't be guarantieed. This has been done to not disturb the AVR communication when there is a problem with the BLE Nano communication (e.g. when the module is missing)
+
 8. Profiles
 Each car model has its own specifics. These specifics are provided by instances of "ICarProfile". Each car model that we have controlled using this mechanism already has a profile. For the code to compile you have to choose a profile (or create your own).
 Some of the specifics are: 
- + maximum steering angle
+ - maximum steering angle
  - steering offset
  - steering inverted?
  - Available features
