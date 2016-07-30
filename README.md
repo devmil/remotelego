@@ -14,5 +14,5 @@ There are some remote control applications available for controlling the car mod
 This simple app consists of a smartphone application and a wearable application
 - [**Tizen wear**](tizen/wear/README.md)
 Contains a Tizen Wear app
-- [**WebApp**](webApp/README.md)
+- [**WebApp**](https://github.com/devmil/remotelego_app)
 The WebApp is hosted in a separate Repository as the distributed version gets hosted on GitHub. If you only want to control your model then you simply can use the already deployed version of this app.
