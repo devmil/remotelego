@@ -1,6 +1,8 @@
 # Remote Lego project
 This project contains all the bits needed to make a remote controllable (Lego) car model.
 
+![Lego car family](docs/presentation/Images/CarFamily.jpg)
+
 For a guide how to modify and build the physical part of this project please refer to the project page on Hackster.io ([Project page](https://www.hackster.io/22864/physical-web-lego-car-remote-control-9b59a9))
 It contains instructions and a BOM for what is needed to get a remote controllable (Lego) car model.
 
