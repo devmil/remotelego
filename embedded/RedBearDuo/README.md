@@ -13,6 +13,9 @@ For a Getting Started guide that covers the installation of Arduino and the RedB
 Please make sure that you select the correct version of the plugin. The version the current code is tested with is mentioned in the LegoControl.ino file on the top.
 To isntall the correct firmware for the selected plugin version just use the Arduino mechanism mentioned in the Getting Started guide to flash the firmware.
 
+Additionally you need to install an stl port for Arduino as the lego car code uses standard types (shared_ptr, vector). There is a zip file containing the Arduino in the repository but you can just follow this guide to download and install the stl port:
+[https://github.com/vancegroup/stlport-avr/wiki](https://github.com/vancegroup/stlport-avr/wiki).
+
 ## Flash
 After you have set up the environment and installed the correct firmware version you should be ready to go. Just hit "Upload" in the Arduino IDE to compile the project and upload it to the RedBear Duo.
 
