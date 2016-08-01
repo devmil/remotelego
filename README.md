@@ -20,7 +20,7 @@ Contains a Tizen Wear app
 The WebApp is hosted in a separate Repository as the distributed version gets hosted on GitHub. If you only want to control your model then you simply can use the already deployed version of this app.
 
 # Getting started
-After preparing your model you want to control and after creating a Mainboard (either by using a pre-made PCB or a hole PCB) you can start off putting software onto your controllers.
+After preparing your model you want to control and after creating a Mainboard (either by using a pre-made PCB or a perfboard) you can start off putting software onto your controllers.
 Please refer to each components ReadMe to get a compile and flash guide:
 - [ATMega32](embedded/Atmega/README.md)
 - [RedBear DUO](embedded/RedBearDuo/README.md)
