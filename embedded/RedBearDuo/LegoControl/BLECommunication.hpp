@@ -1,12 +1,13 @@
 #ifndef LEGOCONTROL_BLECOMMUNICATION_H_
 #define LEGOCONTROL_BLECOMMUNICATION_H_
 
+#include <vector>
+
 #include "Bluetooth.hpp"
 
 #include "LegoCarModel.hpp"
 #include "ICarProfile.hpp"
-
-#include <vector>
+#include "DynamicProfile.hpp"
 
 class SpeedCharacteristic : public BluetoothCharacteristic {
 public:
@@ -158,9 +159,54 @@ private:
   LegoCarModel& m_model;
 };
 
+class ConfigurationCharacteristic : public BluetoothCharacteristic {
+public:
+  ConfigurationCharacteristic(DynamicProfile* dynamicProfile)
+  : BluetoothCharacteristic(String("98014639-f2dc-4a26-a922-456ce6de7abd")),
+    m_dynamicProfile(dynamicProfile) {
+  }
+  virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
+    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+  }
+  virtual uint16_t getDataSize() {
+    return m_dynamicProfile->getDataSize();
+  }
+protected:
+    virtual std::vector<uint8_t> onRead() {
+      std::vector<uint8_t> result;
+      auto data = m_dynamicProfile->getData();
+      uint8_t* castedData = (uint8_t*)&data;
+      for(int i=0; i<m_dynamicProfile->getDataSize(); i++) {
+        result.push_back(castedData[i]);
+      }
+      return result;
+    }
+    virtual void onWrite(std::vector<uint8_t> data) {
+      if(data.size() != getDataSize()) {
+        Serial.println("Invalid configuration data received!");
+        return;
+      }
+      DynamicProfileData profileData;
+      uint8_t* castedData = (uint8_t*)&profileData;
+      for(unsigned int i=0; i<data.size(); i++) {
+        castedData[i] = data[i];
+      }
+      if(m_dynamicProfile->setData(profileData)) {
+        //we have to do a reset
+        //=> enable watchdog 
+        ApplicationWatchdog wd(15, System.reset);
+        //and never trigger it
+        for(;;) {
+        }
+      }
+    }
+private:
+  DynamicProfile* m_dynamicProfile;
+};
+
 class LegoCarService : public BluetoothService {
 public:
-  LegoCarService(LegoCarModel& model, ICarProfile* carProfile) 
+  LegoCarService(LegoCarModel& model, DynamicProfile* carProfile) 
   : BluetoothService(String("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
     
     addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
@@ -177,9 +223,10 @@ public:
     if(carProfile->hasBlinkFeature()) {
       addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
     }
+    addCharacteristic(std::make_shared<ConfigurationCharacteristic>(carProfile));
   }
 };
 
-void BLE_configure(LegoCarModel& model, ICarProfile* carProfile);
+void BLE_configure(LegoCarModel& model, DynamicProfile* profile);
 
 #endif

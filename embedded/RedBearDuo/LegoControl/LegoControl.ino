@@ -7,11 +7,8 @@ SYSTEM_MODE(MANUAL);//do not connect to cloud
 #include "BLECommunication.hpp"
 #include "NANOCommunication.hpp"
 #include "LegoCarModel.hpp"
-#include "ICarProfile.hpp"
-#include "RacingTruckProfile.hpp"
-#include "RacingJeepProfile.hpp"
-#include "DumperFloProfile.hpp"
-#include "DumperMichiProfile.hpp"
+
+#include "DynamicProfile.hpp"
 
 int led = D7; 
 
@@ -21,7 +18,28 @@ uint8_t s_state = 0;
 
 uint64_t s_lastLowFrequencyActionMillis = 0;
 LegoCarModel s_carModel;
-ICarProfile* s_carProfile;
+DynamicProfile* s_carProfile;
+
+void TEMP_setDynamicProfileContent(DynamicProfile* dynamicProfile, ICarProfile* effectiveProfile) {
+  DynamicProfileData data;
+  data.invertSteering = effectiveProfile->invertSteering();
+  data.maxAnglePositive = effectiveProfile->getMaxSteeringAnglePositive();
+  data.maxAngleNegative = effectiveProfile->getMaxSteeringAngleNegative();
+  data.offsetAngle = effectiveProfile->getSteeringOffsetAngle();
+  auto name = effectiveProfile->getDeviceName();
+  for(int i=0; i<DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE; i++) {
+    if(i<sizeof(name)) {
+      data.name[i] = name.charAt(i);
+    } else {
+      data.name[i] = 0;
+    }
+  }
+  data.hasMovingFrontLights = effectiveProfile->hasMovingFrontLightsFeature();
+  data.hasTrunk = effectiveProfile->hasTrunkFeature();
+  data.canBlink = effectiveProfile->hasBlinkFeature();
+
+  dynamicProfile->setData(data);
+}
 
 void setup() {
   pinMode(led, OUTPUT);
@@ -30,12 +48,8 @@ void setup() {
   while(!Serial) {
     delay(10);
   }
-
-choose s_carProfile!
-  //s_carProfile = new RacingTruckProfile();
-  //s_carProfile = new RacingJeepProfile();
-  //s_carProfile = new DumperFloProfile();
-  //s_carProfile = new DumperMichiProfile();
+  //here the data gets loaded
+  s_carProfile = new DynamicProfile(0);
 
   Serial.println("LegoControl: start");
 
