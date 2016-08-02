@@ -24,5 +24,7 @@ task clean(type: Delete) {
 
 project.ext {
     compileSdkVersion = 23
-    buildToolsVersion = "24 rc4"
+    buildToolsVersion = "23.0.3"//"24 rc4"
+    jackEnabled = false
+    javaVersion = JavaVersion.VERSION_1_7
 }

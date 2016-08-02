@@ -98,6 +98,152 @@
                     android:text="@string/activity_control_lr"/>
             </RadioGroup>
         </LinearLayout>
+        <LinearLayout
+            android:id="@+id/activity_control_ll_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:gravity="center_horizontal|top">
+            <Button
+                android:id="@+id/activity_control_ll_settings_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"/>
+        </LinearLayout>
     </LinearLayout>
+
+    <TableLayout
+        android:id="@+id/activity_control_Settings"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true">
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Steering" />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Inverted?" />
+            <android.support.v7.widget.AppCompatCheckBox
+                android:id="@+id/activity_control_settings_chkSteeringInverted"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Max Angle positive"
+                android:labelFor="@+id/activity_control_settings_editSteeringMaxAnglePositive"/>
+            <EditText
+                android:id="@id/activity_control_settings_editSteeringMaxAnglePositive"
+                android:inputType="number"
+                android:maxLines="1"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Max Angle negative"
+                android:labelFor="@+id/activity_control_settings_editSteeringMaxAngleNegative"/>
+            <EditText
+                android:id="@id/activity_control_settings_editSteeringMaxAngleNegative"
+                android:inputType="number"
+                android:maxLines="1"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Offset"
+                android:labelFor="@+id/activity_control_settings_editSteeringOffset"/>
+            <EditText
+                android:id="@id/activity_control_settings_editSteeringOffset"
+                android:inputType="number"
+                android:maxLines="1"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:labelFor="@+id/activity_control_settings_editName"/>
+            <EditText
+                android:id="@id/activity_control_settings_editName"
+                android:inputType="text"
+                android:maxLength="13"
+                android:maxLines="1"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Features" />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Can blink" />
+            <android.support.v7.widget.AppCompatCheckBox
+                android:id="@+id/activity_control_settings_chkFeatureBlink"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Has moving front lights" />
+            <android.support.v7.widget.AppCompatCheckBox
+                android:id="@+id/activity_control_settings_chkFeatureFrontLights"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Has trunk" />
+            <android.support.v7.widget.AppCompatCheckBox
+                android:id="@+id/activity_control_settings_chkFeatureTrunk"
+                />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">
+            <Button
+                android:id="@+id/activity_control_settings_btnSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"/>
+            <Button
+                android:id="@+id/activity_control_settings_btnDiscard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Discard"/>
+        </TableRow>
+    </TableLayout>
 
 </RelativeLayout>
