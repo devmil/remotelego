@@ -81,6 +81,16 @@ bool DynamicProfile::setData(DynamicProfileData data) {
         || m_data.hasTrunk != data.hasTrunk
         || m_data.hasMovingFrontLights != data.hasMovingFrontLights;
 
+    Serial.println("Setting configuration data:");
+    Serial.println("Invert steering = " + String(data.invertSteering));
+    Serial.println("Max Positive    = " + String(data.maxAnglePositive));
+    Serial.println("Max Negative    = " + String(data.maxAngleNegative));
+    Serial.println("Offset          = " + String(data.offsetAngle));
+    Serial.println("Name            = " + String(data.name));
+    Serial.println("Moving Lights   = " + String(data.hasMovingFrontLights));
+    Serial.println("Trunk           = " + String(data.hasTrunk));
+    Serial.println("Blink           = " + String(data.canBlink));
+
     m_data = data;
     save();
 

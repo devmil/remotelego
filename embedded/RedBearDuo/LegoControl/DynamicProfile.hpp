@@ -5,7 +5,7 @@
 
 #include "ICarProfile.hpp"
 
-#define DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE 20
+#define DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE 13 //so that the total amount of data is 20 (seems to be a limitation in the BLE stack)
 
 struct DynamicProfileData {
     bool invertSteering;
