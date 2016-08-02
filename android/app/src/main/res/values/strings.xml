@@ -7,4 +7,16 @@
     <string name="activity_control_left">L</string>
     <string name="activity_control_r">R</string>
     <string name="activity_control_lr">LR</string>
+    <string name="activity_control_settings_steering">Steering</string>
+    <string name="activity_control_settings_inverted">Inverted?</string>
+    <string name="activity_control_settings_max_angle_positive">Max Angle positive</string>
+    <string name="activity_control_settings_max_angle_negative">Max Angle negative</string>
+    <string name="activity_control_settings_offset">Offset</string>
+    <string name="activity_control_settings_name">Name</string>
+    <string name="activity_control_settings_features">Features</string>
+    <string name="activity_control_settings_can_blink">Can blink</string>
+    <string name="activity_control_settings_has_moving_front_lights">Has moving front lights</string>
+    <string name="activity_control_settings_has_trunk">Has trunk</string>
+    <string name="activity_control_settings_save">Save</string>
+    <string name="activity_control_settings_discard">Discard</string>
 </resources>

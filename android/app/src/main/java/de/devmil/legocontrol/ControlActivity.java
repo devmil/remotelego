@@ -3,9 +3,14 @@ package de.devmil.legocontrol;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatCheckBox;
+import android.support.v7.widget.ListViewCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -13,17 +18,21 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.util.List;
 import java.util.Locale;
 
 import de.devmil.legologic.CarConfiguration;
 import de.devmil.legologic.CarHandler;
 import de.devmil.legologic.DirectionControl;
 import de.devmil.legologic.ICarHandlerStateListener;
+import de.devmil.legologic.ValidationError;
 
 public class ControlActivity extends AppCompatActivity implements ICarHandlerStateListener {
 
@@ -58,7 +67,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
 
     private Button btnSettings;
 
-    private LinearLayout llSettings;
+    private View vSettings;
 
     private Button btnSettingsSave;
     private Button btnSettingsDiscard;
@@ -95,7 +104,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
 
         btnSettings = (Button)findViewById(R.id.activity_control_ll_settings_btn);
 
-        llSettings = (LinearLayout)findViewById(R.id.activity_control_Settings);
+        vSettings = findViewById(R.id.activity_control_Settings);
 
         btnSettingsSave = (Button)findViewById(R.id.activity_control_settings_btnSave);
         btnSettingsDiscard = (Button)findViewById(R.id.activity_control_settings_btnDiscard);
@@ -187,7 +196,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
             @Override
             public void onClick(View v) {
                 setConfigurationValuesToView();
-                llSettings.setVisibility(View.VISIBLE);
+                vSettings.setVisibility(View.VISIBLE);
                 mDirectionControl.setVisibility(View.GONE);
                 mLinearLayoutSwitches.setVisibility(View.GONE);
             }
@@ -197,7 +206,7 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
             @Override
             public void onClick(View v) {
                 if(saveConfiguration()) {
-                    llSettings.setVisibility(View.GONE);
+                    vSettings.setVisibility(View.GONE);
                     mDirectionControl.setVisibility(View.VISIBLE);
                     adaptSwitchVisibility();
                 }
@@ -206,14 +215,95 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
         btnSettingsDiscard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                llSettings.setVisibility(View.GONE);
+                vSettings.setVisibility(View.GONE);
                 mDirectionControl.setVisibility(View.VISIBLE);
                 adaptSwitchVisibility();
             }
         });
 
+        configureEditTextValidation(mEditSettingsName, new IValidator() {
+            @Override
+            public boolean isValid(CarConfiguration configuration) {
+                List<ValidationError> errors = configuration.validate();
+                for(ValidationError error : errors) {
+                    if(error.getDataField() == ValidationError.DataField.Name) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
+        configureEditTextValidation(mEditSteeringMaxAnglePositive, new IValidator() {
+            @Override
+            public boolean isValid(CarConfiguration configuration) {
+                List<ValidationError> errors = configuration.validate();
+                for(ValidationError error : errors) {
+                    if(error.getDataField() == ValidationError.DataField.MaxSteeringAnglePositive) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
+        configureEditTextValidation(mEditSteeringMaxAngleNegative, new IValidator() {
+            @Override
+            public boolean isValid(CarConfiguration configuration) {
+                List<ValidationError> errors = configuration.validate();
+                for(ValidationError error : errors) {
+                    if(error.getDataField() == ValidationError.DataField.MaxSteeringAngleNegative) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
+        configureEditTextValidation(mEditSteeringOffset, new IValidator() {
+            @Override
+            public boolean isValid(CarConfiguration configuration) {
+                List<ValidationError> errors = configuration.validate();
+                for(ValidationError error : errors) {
+                    if(error.getDataField() == ValidationError.DataField.SteeringOffset) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+
         adaptSwitchVisibility();
         adaptModelState();
+    }
+
+    interface IValidator {
+        boolean isValid(CarConfiguration configuration);
+    }
+
+    private void configureEditTextValidation(final EditText editText, final IValidator validator) {
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                CarConfiguration configuration = getCarConfigurationFromViews();
+                if(configuration == null) {
+                    return;
+                }
+                if(!validator.isValid(configuration)) {
+                    editText.setBackgroundColor(Color.argb(60, 255, 0, 0));
+                } else {
+                    editText.setBackgroundColor(Color.TRANSPARENT);
+                }
+            }
+        });
     }
 
     private void adaptSwitchVisibility() {
@@ -316,29 +406,47 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
         mChkHasTrunk.setChecked(configuration.hasTrunk());
     }
 
+    private CarConfiguration getCarConfigurationFromViews() {
+        try {
+            CarConfiguration configuration = new CarConfiguration();
+            configuration.setSteeringInverted(mChkSteeringInverted.isChecked());
+            configuration.setMaxSteeringAnglePositive(Integer.parseInt(mEditSteeringMaxAnglePositive.getText().toString()));
+            configuration.setMaxSteeringAngleNegative(Integer.parseInt(mEditSteeringMaxAngleNegative.getText().toString()));
+            configuration.setSteeringOffset(Integer.parseInt(mEditSteeringOffset.getText().toString()));
+            configuration.setName(mEditSettingsName.getText().toString());
+            configuration.setCanBlink(mChkCanBlink.isChecked());
+            configuration.setHasMovingFrontLights(mChkHasMovingFrontLights.isChecked());
+            configuration.setHasTrunk(mChkHasTrunk.isChecked());
+
+            return configuration;
+        }
+        catch(Exception e) {
+            return null;
+        }
+    }
+
     private boolean saveConfiguration() {
         CarHandler ch = getCarHandler();
         if(ch == null) {
             return false;
         }
 
-        CarConfiguration configuration = new CarConfiguration();
-        configuration.setSteeringInverted(mChkSteeringInverted.isChecked());
-        configuration.setMaxSteeringAnglePositive(Integer.parseInt(mEditSteeringMaxAnglePositive.getText().toString()));
-        configuration.setMaxSteeringAngleNegative(Integer.parseInt(mEditSteeringMaxAngleNegative.getText().toString()));
-        configuration.setSteeringOffset(Integer.parseInt(mEditSteeringOffset.getText().toString()));
-        configuration.setName(mEditSettingsName.getText().toString());
-        configuration.setCanBlink(mChkCanBlink.isChecked());
-        configuration.setHasMovingFrontLights(mChkHasMovingFrontLights.isChecked());
-        configuration.setHasTrunk(mChkHasTrunk.isChecked());
+        CarConfiguration configuration = getCarConfigurationFromViews();
+        if(configuration == null) {
+            return false;
+        }
 
         //Validate
-        if(configuration.getMaxSteeringAnglePositive() > 90
-                || configuration.getMaxSteeringAnglePositive() < 0
-                || configuration.getMaxSteeringAngleNegative() < -90
-                || configuration.getMaxSteeringAngleNegative() > 0
-                || configuration.getSteeringOffset() < -90
-                || configuration.getSteeringOffset() > 90) {
+        List<ValidationError> validationErrors = configuration.validate();
+        if(validationErrors.size() > 0) {
+            StringBuilder msgBuilder = new StringBuilder();
+            for(ValidationError error : validationErrors) {
+                if(msgBuilder.length() > 0) {
+                    msgBuilder.append("\r\n");
+                }
+                msgBuilder.append(error.getMessage());
+            }
+            Toast.makeText(this, msgBuilder.toString(), Toast.LENGTH_LONG).show();
             return false;
         }
 

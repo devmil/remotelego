@@ -3,6 +3,7 @@ package de.devmil.legologic;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CarConfiguration {
     private boolean isSteeringInverted;
@@ -80,6 +81,32 @@ public class CarConfiguration {
 
     public void setCanBlink(boolean canBlink) {
         this.canBlink = canBlink;
+    }
+
+    public List<ValidationError> validate() {
+        List<ValidationError> result = new ArrayList<>();
+        //1. angles
+        if(maxSteeringAnglePositive > 90 || maxSteeringAnglePositive < 0) {
+            result.add(new ValidationError(ValidationError.DataField.MaxSteeringAnglePositive, "Max positive steering angle has to be between 0 and 90"));
+        }
+        if(maxSteeringAngleNegative < -90 || maxSteeringAngleNegative > 0) {
+            result.add(new ValidationError(ValidationError.DataField.MaxSteeringAngleNegative, "Max negative steering angle has to be between -90 and 0"));
+        }
+        if(steeringOffset > 90 || steeringOffset < -90) {
+            result.add(new ValidationError(ValidationError.DataField.SteeringOffset, "Steering offset has to be between -90 and 0"));
+        }
+
+        //2. name availability
+        if(name.equals("")) {
+            result.add(new ValidationError(ValidationError.DataField.Name, "Name can not be empty"));
+        }
+
+        //3. name length
+        if(name.length() > NAME_LENGTH) {
+            result.add(new ValidationError(ValidationError.DataField.Name, String.format(Locale.getDefault(), "Name can only be %d characters long", NAME_LENGTH)));
+        }
+
+        return result;
     }
 
     public byte[] toBytes() {
