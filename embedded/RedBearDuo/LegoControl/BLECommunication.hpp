@@ -186,19 +186,21 @@ protected:
         Serial.println("Invalid configuration data received!");
         return;
       }
+      Serial.println("Configuration data received...");
       DynamicProfileData profileData;
       uint8_t* castedData = (uint8_t*)&profileData;
       for(unsigned int i=0; i<data.size(); i++) {
         castedData[i] = data[i];
       }
-      if(m_dynamicProfile->setData(profileData)) {
-        //we have to do a reset
-        //=> enable watchdog 
-        ApplicationWatchdog wd(15, System.reset);
-        //and never trigger it
-        for(;;) {
-        }
-      }
+      m_dynamicProfile->setData(profileData);
+      // if(m_dynamicProfile->setData(profileData)) {
+      //   //we have to do a reset
+      //   //=> enable watchdog 
+      //   ApplicationWatchdog wd(15, System.reset);
+      //   //and never trigger it
+      //   for(;;) {
+      //   }
+      // }
     }
 private:
   DynamicProfile* m_dynamicProfile;
@@ -209,22 +211,32 @@ public:
   LegoCarService(LegoCarModel& model, DynamicProfile* carProfile) 
   : BluetoothService(String("40480f29-7bad-4ea5-8bf8-499405c9b324")) {
     
+    m_profile = carProfile;
+
     addCharacteristic(std::make_shared<SpeedCharacteristic>(model));
     addCharacteristic(std::make_shared<SteerCharacteristic>(model));
 
+    m_usedTrunk = carProfile->hasTrunkFeature(); 
     if(carProfile->hasTrunkFeature()) {
       addCharacteristic(std::make_shared<TrunkCharacteristic>(model));
     }
     
+    m_usedMFL = carProfile->hasMovingFrontLightsFeature(); 
     if(carProfile->hasMovingFrontLightsFeature()) {
       addCharacteristic(std::make_shared<MovableFrontLightCharacteristic>(model));
     }
     
+    m_usedBlink = carProfile->hasBlinkFeature(); 
     if(carProfile->hasBlinkFeature()) {
       addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
     }
     addCharacteristic(std::make_shared<ConfigurationCharacteristic>(carProfile));
   }
+private:
+  DynamicProfile* m_profile;
+  bool m_usedTrunk;
+  bool m_usedMFL;
+  bool m_usedBlink;
 };
 
 void BLE_configure(LegoCarModel& model, DynamicProfile* profile);

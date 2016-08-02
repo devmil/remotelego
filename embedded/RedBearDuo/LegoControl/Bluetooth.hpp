@@ -57,7 +57,7 @@ private:
     String m_uuid;
     std::vector<uint8_t> m_uuidBytes; 
     std::vector<BluetoothCharacteristic::Ptr> m_characteristics;
-    std::map<uint16_t, BluetoothCharacteristic::Ptr> m_characteristicMap;   
+    std::map<uint16_t, BluetoothCharacteristic::Ptr> m_characteristicMap;
 };
 
 class Bluetooth {
