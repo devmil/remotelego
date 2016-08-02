@@ -4,8 +4,14 @@
 #include <vector>
 #include "Arduino.h"
 
-class ICarProfile {
+class ICarProfileDataChangedListener {
+public:
+    virtual ~ICarProfileDataChangedListener() {}
+    
+    virtual void onDataChanged() = 0;
+};
 
+class ICarProfile {
 public:
     virtual ~ICarProfile() {}
 
@@ -19,6 +25,9 @@ public:
     virtual bool hasBlinkFeature() = 0;
 
     virtual String getDeviceName() = 0;
+
+    virtual void addListener(ICarProfileDataChangedListener* listener) = 0;
+    virtual void removeListener(ICarProfileDataChangedListener* listener) = 0;
 };
 
 #endif

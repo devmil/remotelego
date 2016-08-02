@@ -1,6 +1,8 @@
 #ifndef DYNAMICPROFILE_HPP
 #define DYNAMICPROFILE_HPP
 
+#include <vector>
+
 #include "ICarProfile.hpp"
 
 #define DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE 20
@@ -43,6 +45,10 @@ public:
 
     String getDeviceName() override;
 
+    void addListener(ICarProfileDataChangedListener* listener) override;
+    void removeListener(ICarProfileDataChangedListener* listener) override;
+
+
 /**
 *  Dynamic profile members
 */
@@ -57,6 +63,7 @@ public:
 private:
     DynamicProfileData m_data;
     int m_eepromOffset;
+    std::vector<ICarProfileDataChangedListener*> m_listener;
 
     void load();
     void save();

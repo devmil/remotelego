@@ -1,5 +1,7 @@
 #include "DynamicProfile.hpp"
 
+#include <algorithm>
+
 DynamicProfile::DynamicProfile(int eepromOffset) {
     m_eepromOffset = eepromOffset;
     m_data.invertSteering = false;
@@ -62,6 +64,17 @@ String DynamicProfile::getDeviceName() {
     return String(tmpName);
 }
 
+void DynamicProfile::addListener(ICarProfileDataChangedListener* listener) {
+    m_listener.push_back(listener);
+}
+void DynamicProfile::removeListener(ICarProfileDataChangedListener* listener) {
+    auto iterator = std::find(m_listener.begin(), m_listener.end(), listener);
+    if(iterator != m_listener.end()) {
+        m_listener.erase(iterator);
+    }
+}
+
+
 bool DynamicProfile::setData(DynamicProfileData data) {
     bool restartRequired = 
         m_data.canBlink != data.canBlink
@@ -70,6 +83,10 @@ bool DynamicProfile::setData(DynamicProfileData data) {
 
     m_data = data;
     save();
+
+    for(const auto& listener : m_listener) {
+        listener->onDataChanged();
+    }
 
     return restartRequired;
 }

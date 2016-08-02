@@ -16,6 +16,9 @@ LegoCarModel::LegoCarModel() {
 }
 
 LegoCarModel::~LegoCarModel() {
+  if(m_carProfile) {
+    m_carProfile->removeListener(this);
+  }
 }
 
 int8_t LegoCarModel::getMotorSpeedPercent() {
@@ -115,6 +118,13 @@ void LegoCarModel::init(ICarProfile* carProfile) {
   BLENano::init();
   AVRProtocol::send(AVRCommandFactory::createSetSteeringOffsetCommand(m_carProfile->getSteeringOffsetAngle()));
   setSteeringDegrees(0);
+  m_carProfile->addListener(this);
+}
+
+void LegoCarModel::onDataChanged() {
+  AVRProtocol::send(AVRCommandFactory::createSetSteeringOffsetCommand(m_carProfile->getSteeringOffsetAngle()));
+  setSteeringDegrees(m_steeringDegrees);
+  sendLightState();
 }
 
 uint32_t LegoCarModel::getStateColor() {

@@ -29,7 +29,7 @@ enum class MovableFrontLightState {
   Active = 2
 };
 
-class LegoCarModel {
+class LegoCarModel : public virtual ICarProfileDataChangedListener {
 public:
   LegoCarModel();
   virtual ~LegoCarModel();
@@ -61,6 +61,8 @@ public:
   void loopLowFrequency();
 
   void init(ICarProfile* carProfile);
+
+  void onDataChanged() override;
 private:
   ICarProfile* m_carProfile;
   int8_t m_speedPercent;
