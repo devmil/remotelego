@@ -162,7 +162,7 @@ private:
 class ConfigurationCharacteristic : public BluetoothCharacteristic {
 public:
   ConfigurationCharacteristic(DynamicProfile* dynamicProfile)
-  : BluetoothCharacteristic(String("98014639-f2dc-4a26-a922-456ce6de7abd")),
+  : BluetoothCharacteristic(String("2ac1fdb2-d971-4595-8e32-e8c5d80edf5f")),
     m_dynamicProfile(dynamicProfile) {
   }
   virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
@@ -193,18 +193,50 @@ protected:
         castedData[i] = data[i];
       }
       m_dynamicProfile->setData(profileData);
-      // if(m_dynamicProfile->setData(profileData)) {
-      //   //we have to do a reset
-      //   //=> enable watchdog 
-      //   ApplicationWatchdog wd(15, System.reset);
-      //   //and never trigger it
-      //   for(;;) {
-      //   }
-      // }
     }
 private:
   DynamicProfile* m_dynamicProfile;
 };
+
+class NameConfigurationCharacteristic : public BluetoothCharacteristic {
+public:
+  NameConfigurationCharacteristic(DynamicProfile* dynamicProfile)
+  : BluetoothCharacteristic(String("b394673e-dea0-4044-a189-86f1c85ce22e")),
+    m_dynamicProfile(dynamicProfile) {
+  }
+  virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
+    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+  }
+  virtual uint16_t getDataSize() {
+    return m_dynamicProfile->getNameDataSize();
+  }
+protected:
+    virtual std::vector<uint8_t> onRead() {
+      std::vector<uint8_t> result;
+      auto data = m_dynamicProfile->getNameData();
+      uint8_t* castedData = (uint8_t*)&data;
+      for(int i=0; i<m_dynamicProfile->getNameDataSize(); i++) {
+        result.push_back(castedData[i]);
+      }
+      return result;
+    }
+    virtual void onWrite(std::vector<uint8_t> data) {
+      if(data.size() != getDataSize()) {
+        Serial.println("Invalid name configuration data received!");
+        return;
+      }
+      Serial.println("Name configuration data received...");
+      DynamicProfileNameData profileNameData;
+      uint8_t* castedData = (uint8_t*)&profileNameData;
+      for(unsigned int i=0; i<data.size(); i++) {
+        castedData[i] = data[i];
+      }
+      m_dynamicProfile->setNameData(profileNameData);
+    }
+private:
+  DynamicProfile* m_dynamicProfile;
+};
+
 
 class LegoCarService : public BluetoothService {
 public:
@@ -231,6 +263,7 @@ public:
       addCharacteristic(std::make_shared<BlinkCharacteristic>(model));
     }
     addCharacteristic(std::make_shared<ConfigurationCharacteristic>(carProfile));
+    addCharacteristic(std::make_shared<NameConfigurationCharacteristic>(carProfile));
   }
 private:
   DynamicProfile* m_profile;

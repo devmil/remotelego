@@ -9,6 +9,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -107,7 +109,8 @@ public class CarHandler extends BluetoothGattCallback {
     private static final UUID UUID_CHARACTERISTIC_TRUNK                 = UUID.fromString("e0af3340-022e-47e1-a263-d68887dc41d4");
     private static final UUID UUID_CHARACTERISTIC_MOVABLE_FRONT_LIGHT   = UUID.fromString("fa10e4de-259e-4d23-9f59-45a9c66802ca");
     private static final UUID UUID_CHARACTERISTIC_BLINK                 = UUID.fromString("aad03b81-f2ea-47db-ae1e-7c2f9e86e93e");
-    private static final UUID UUID_CHARACTERISTIC_CONFIGURATION         = UUID.fromString("98014639-f2dc-4a26-a922-456ce6de7abd");
+    private static final UUID UUID_CHARACTERISTIC_DATA_CONFIGURATION    = UUID.fromString("2ac1fdb2-d971-4595-8e32-e8c5d80edf5f");
+    private static final UUID UUID_CHARACTERISTIC_NAME_CONFIGURATION    = UUID.fromString("b394673e-dea0-4044-a189-86f1c85ce22e");
 
     private boolean mIsConnected;
     private boolean mShouldDisconnect;
@@ -117,6 +120,7 @@ public class CarHandler extends BluetoothGattCallback {
     private BluetoothGattService mService;
 
     private ICarHandlerStateListener mListener;
+    private ICarHandlerDataListener mDataListener;
 
     private String mCarAddress;
 
@@ -133,6 +137,8 @@ public class CarHandler extends BluetoothGattCallback {
     private Timer mSendTimer;
 
     private CarConfiguration mConfiguration = null;
+
+    private List<Runnable> mDelayedBTActions = new ArrayList<>();
 
     public CarHandler(Context context, String carAddress) {
         this.mSpeed = 0;
@@ -160,6 +166,10 @@ public class CarHandler extends BluetoothGattCallback {
 
     public void setListener(ICarHandlerStateListener listener) {
         mListener = listener;
+    }
+
+    public void setDataListener(ICarHandlerDataListener listener) {
+        mDataListener = listener;
     }
 
     public String getAddress() {
@@ -230,11 +240,13 @@ public class CarHandler extends BluetoothGattCallback {
         if(!mIsConnected || mService == null) {
             return false;
         }
-        BluetoothGattCharacteristic configurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_CONFIGURATION);
-        if(configurationCharacteristic == null) {
+        BluetoothGattCharacteristic dataConfigurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_DATA_CONFIGURATION);
+        BluetoothGattCharacteristic nameConfigurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_NAME_CONFIGURATION);
+        if(dataConfigurationCharacteristic == null
+                || nameConfigurationCharacteristic == null) {
             return false;
         }
-        if(mConfiguration == null) {
+        if(mConfiguration == null || !mConfiguration.isDataInitialized() || !mConfiguration.isNameInitialized()) {
             return false;
         }
         return true;
@@ -244,13 +256,29 @@ public class CarHandler extends BluetoothGattCallback {
         return mConfiguration;
     }
 
+    private void tryWriteCharacteristic(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+        if(!gatt.writeCharacteristic(characteristic)) {
+            mDelayedBTActions.add(new Runnable() {
+                @Override
+                public void run() {
+                    tryWriteCharacteristic(gatt, characteristic);
+                }
+            });
+        }
+    }
+
     public void setConfiguration(CarConfiguration configuration) {
-        BluetoothGattCharacteristic configurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_CONFIGURATION);
-        if(configurationCharacteristic == null) {
+        BluetoothGattCharacteristic dataConfigurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_DATA_CONFIGURATION);
+        BluetoothGattCharacteristic nameConfigurationCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_NAME_CONFIGURATION);
+        if(dataConfigurationCharacteristic == null
+                || nameConfigurationCharacteristic == null) {
             return;
         }
-        if(configurationCharacteristic.setValue(configuration.toBytes())) {
-            mGatt.writeCharacteristic(configurationCharacteristic);
+        if(dataConfigurationCharacteristic.setValue(configuration.toDataBytes())) {
+            tryWriteCharacteristic(mGatt, dataConfigurationCharacteristic);
+        }
+        if(nameConfigurationCharacteristic.setValue(configuration.toNameBytes())) {
+            tryWriteCharacteristic(mGatt, nameConfigurationCharacteristic);
         }
     }
 
@@ -281,6 +309,12 @@ public class CarHandler extends BluetoothGattCallback {
     private void onReadyStateChanged(boolean ready) {
         if(mListener != null) {
             mListener.readyStateChanged(ready);
+        }
+    }
+
+    private void onDataChanged() {
+        if(mDataListener != null) {
+            mDataListener.carHandlerDataChanged();
         }
     }
 
@@ -367,8 +401,19 @@ public class CarHandler extends BluetoothGattCallback {
         }
     }
 
+    private void tryReadCharacteristic(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+        if(!gatt.readCharacteristic(characteristic)) {
+            mDelayedBTActions.add(new Runnable() {
+                @Override
+                public void run() {
+                    tryReadCharacteristic(gatt, characteristic);
+                }
+            });
+        }
+    }
+
     @Override
-    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+    public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
         if(status != BluetoothGatt.GATT_SUCCESS) {
             mIsConnected = false;
             mService = null;
@@ -377,9 +422,12 @@ public class CarHandler extends BluetoothGattCallback {
         }
         mIsConnected = true;
         mService = gatt.getService(UUID_SERVICE);
-        BluetoothGattCharacteristic configCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_CONFIGURATION);
-        if(configCharacteristic != null) {
-            gatt.readCharacteristic(configCharacteristic);
+        final BluetoothGattCharacteristic configDataCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_DATA_CONFIGURATION);
+        BluetoothGattCharacteristic configNameCharacteristic = mService.getCharacteristic(UUID_CHARACTERISTIC_NAME_CONFIGURATION);
+        if(configDataCharacteristic != null
+                && configNameCharacteristic != null) {
+            tryReadCharacteristic(gatt, configDataCharacteristic);
+            tryReadCharacteristic(gatt, configNameCharacteristic);
         }
         onReadyStateChanged(true);
         transmitData();
@@ -387,22 +435,67 @@ public class CarHandler extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        if(characteristic.getUuid().equals(UUID_CHARACTERISTIC_CONFIGURATION)) {
+        if(status == BluetoothGatt.GATT_SUCCESS && characteristic.getUuid().equals(UUID_CHARACTERISTIC_DATA_CONFIGURATION)) {
             byte[] bytes = characteristic.getValue();
 
-            mConfiguration = CarConfiguration.fromBytes(bytes);
+            if(mConfiguration == null) {
+                mConfiguration = new CarConfiguration();
+            }
+
+            mConfiguration.setDataBytes(bytes);
+
             onReadyStateChanged(true);
+            onDataChanged();
         }
+        else if(status == BluetoothGatt.GATT_SUCCESS && characteristic.getUuid().equals(UUID_CHARACTERISTIC_NAME_CONFIGURATION)) {
+            byte[] bytes = characteristic.getValue();
+
+            if(mConfiguration == null) {
+                mConfiguration = new CarConfiguration();
+            }
+
+            mConfiguration.setNameBytes(bytes);
+
+            onReadyStateChanged(true);
+            onDataChanged();
+        }
+        executeNextDelayedAction();
         super.onCharacteristicRead(gatt, characteristic, status);
     }
 
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        if(characteristic.getUuid().equals(UUID_CHARACTERISTIC_CONFIGURATION)) {
+        if(status == BluetoothGatt.GATT_SUCCESS && characteristic.getUuid().equals(UUID_CHARACTERISTIC_DATA_CONFIGURATION)) {
             byte[] bytes = characteristic.getValue();
 
-            mConfiguration = CarConfiguration.fromBytes(bytes);
+            if(mConfiguration == null) {
+                mConfiguration = new CarConfiguration();
+            }
+
+            mConfiguration.setDataBytes(bytes);
+
+            onDataChanged();
         }
+        else if(status == BluetoothGatt.GATT_SUCCESS && characteristic.getUuid().equals(UUID_CHARACTERISTIC_NAME_CONFIGURATION)) {
+            byte[] bytes = characteristic.getValue();
+
+            if(mConfiguration == null) {
+                mConfiguration = new CarConfiguration();
+            }
+
+            mConfiguration.setNameBytes(bytes);
+
+            onDataChanged();
+        }
+        executeNextDelayedAction();
         super.onCharacteristicWrite(gatt, characteristic, status);
+    }
+
+    private void executeNextDelayedAction() {
+        if(mDelayedBTActions.size() > 0) {
+            Runnable action = mDelayedBTActions.get(0);
+            mDelayedBTActions.remove(0);
+            action.run();
+        }
     }
 }

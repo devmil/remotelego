@@ -195,7 +195,7 @@
                 <EditText
                     android:id="@id/activity_control_settings_editName"
                     android:inputType="text"
-                    android:maxLength="13"
+                    android:maxLength="20"
                     android:maxLines="1"
                     />
             </TableRow>

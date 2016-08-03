@@ -6,125 +6,129 @@ import java.util.List;
 import java.util.Locale;
 
 public class CarConfiguration {
-    private boolean isSteeringInverted;
-    private int maxSteeringAnglePositive;
-    private int maxSteeringAngleNegative;
-    private int steeringOffset;
+    private boolean mIsSteeringInverted;
+    private int mMaxSteeringAnglePositive;
+    private int mMaxSteeringAngleNegative;
+    private int mSteeringOffset;
 
-    private String name;
+    private String mName;
 
-    private boolean hasMovingFrontLights;
-    private boolean hasTrunk;
-    private boolean canBlink;
+    private boolean mHasMovingFrontLights;
+    private boolean mHasTrunk;
+    private boolean mCanBlink;
 
-    private static final int NAME_LENGTH = 13;
+    private boolean mIsDataInitialized;
+    private boolean mIsNameInitialized;
+
+    private static final int NAME_LENGTH = 20;
+
+    public boolean isDataInitialized() {
+        return mIsDataInitialized;
+    }
+
+    public boolean isNameInitialized() {
+        return mIsNameInitialized;
+    }
 
     public boolean isSteeringInverted() {
-        return isSteeringInverted;
+        return mIsSteeringInverted;
     }
 
     public void setSteeringInverted(boolean steeringInverted) {
-        isSteeringInverted = steeringInverted;
+        mIsSteeringInverted = steeringInverted;
     }
 
     public int getMaxSteeringAnglePositive() {
-        return maxSteeringAnglePositive;
+        return mMaxSteeringAnglePositive;
     }
 
     public void setMaxSteeringAnglePositive(int maxSteeringAnglePositive) {
-        this.maxSteeringAnglePositive = maxSteeringAnglePositive;
+        this.mMaxSteeringAnglePositive = maxSteeringAnglePositive;
     }
 
     public int getMaxSteeringAngleNegative() {
-        return maxSteeringAngleNegative;
+        return mMaxSteeringAngleNegative;
     }
 
     public void setMaxSteeringAngleNegative(int maxSteeringAngleNegative) {
-        this.maxSteeringAngleNegative = maxSteeringAngleNegative;
+        this.mMaxSteeringAngleNegative = maxSteeringAngleNegative;
     }
 
     public int getSteeringOffset() {
-        return steeringOffset;
+        return mSteeringOffset;
     }
 
     public void setSteeringOffset(int steeringOffset) {
-        this.steeringOffset = steeringOffset;
+        this.mSteeringOffset = steeringOffset;
     }
 
     public String getName() {
-        return name;
+        return mName;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.mName = name;
     }
 
     public boolean hasMovingFrontLights() {
-        return hasMovingFrontLights;
+        return mHasMovingFrontLights;
     }
 
     public void setHasMovingFrontLights(boolean hasMovingFrontLights) {
-        this.hasMovingFrontLights = hasMovingFrontLights;
+        this.mHasMovingFrontLights = hasMovingFrontLights;
     }
 
     public boolean hasTrunk() {
-        return hasTrunk;
+        return mHasTrunk;
     }
 
     public void setHasTrunk(boolean hasTrunk) {
-        this.hasTrunk = hasTrunk;
+        this.mHasTrunk = hasTrunk;
     }
 
     public boolean canBlink() {
-        return canBlink;
+        return mCanBlink;
     }
 
     public void setCanBlink(boolean canBlink) {
-        this.canBlink = canBlink;
+        this.mCanBlink = canBlink;
     }
 
     public List<ValidationError> validate() {
         List<ValidationError> result = new ArrayList<>();
         //1. angles
-        if(maxSteeringAnglePositive > 90 || maxSteeringAnglePositive < 0) {
+        if(mMaxSteeringAnglePositive > 90 || mMaxSteeringAnglePositive < 0) {
             result.add(new ValidationError(ValidationError.DataField.MaxSteeringAnglePositive, "Max positive steering angle has to be between 0 and 90"));
         }
-        if(maxSteeringAngleNegative < -90 || maxSteeringAngleNegative > 0) {
+        if(mMaxSteeringAngleNegative < -90 || mMaxSteeringAngleNegative > 0) {
             result.add(new ValidationError(ValidationError.DataField.MaxSteeringAngleNegative, "Max negative steering angle has to be between -90 and 0"));
         }
-        if(steeringOffset > 90 || steeringOffset < -90) {
+        if(mSteeringOffset > 90 || mSteeringOffset < -90) {
             result.add(new ValidationError(ValidationError.DataField.SteeringOffset, "Steering offset has to be between -90 and 0"));
         }
 
-        //2. name availability
-        if(name.equals("")) {
+        //2. mName availability
+        if(mName.equals("")) {
             result.add(new ValidationError(ValidationError.DataField.Name, "Name can not be empty"));
         }
 
-        //3. name length
-        if(name.length() > NAME_LENGTH) {
+        //3. mName length
+        if(mName.length() > NAME_LENGTH) {
             result.add(new ValidationError(ValidationError.DataField.Name, String.format(Locale.getDefault(), "Name can only be %d characters long", NAME_LENGTH)));
         }
 
         return result;
     }
 
-    public byte[] toBytes() {
+    public byte[] toDataBytes() {
         List<Byte> result = new ArrayList<>();
-        result.add(isSteeringInverted ? (byte)0x01 : (byte)0x00);
-        result.add((byte) maxSteeringAnglePositive);
-        result.add((byte) maxSteeringAngleNegative);
-        result.add((byte) steeringOffset);
-        for(int i=0; i<NAME_LENGTH; i++) {
-            if(name.length() > i) {
-                result.add((byte)name.charAt(i));
-            } else {
-                result.add((byte)0);
-            }
-        }
-        result.add(hasMovingFrontLights ? (byte)1 : (byte)0);
-        result.add(hasTrunk ? (byte)1 : (byte)0);
-        result.add(canBlink ? (byte)1 : (byte)0);
+        result.add(mIsSteeringInverted ? (byte)0x01 : (byte)0x00);
+        result.add((byte) mMaxSteeringAnglePositive);
+        result.add((byte) mMaxSteeringAngleNegative);
+        result.add((byte) mSteeringOffset);
+        result.add(mHasMovingFrontLights ? (byte)1 : (byte)0);
+        result.add(mHasTrunk ? (byte)1 : (byte)0);
+        result.add(mCanBlink ? (byte)1 : (byte)0);
 
         byte[] resultBytes = new byte[result.size()];
         for(int i=0; i<result.size(); i++) {
@@ -134,39 +138,80 @@ public class CarConfiguration {
         return resultBytes;
     }
 
-    public static CarConfiguration fromBytes(byte[] bytes) {
+    public byte[] toNameBytes() {
+        List<Byte> result = new ArrayList<>();
+        for(int i=0; i<NAME_LENGTH; i++) {
+            if(mName.length() > i) {
+                result.add((byte) mName.charAt(i));
+            } else {
+                result.add((byte)0);
+            }
+        }
+
+        byte[] resultBytes = new byte[result.size()];
+        for(int i=0; i<result.size(); i++) {
+            resultBytes[i] = result.get(i);
+        }
+
+        return resultBytes;
+    }
+
+    public void setNameBytes(byte[] bytes) {
+        if(bytes == null) {
+            return;
+        }
+
+        mIsNameInitialized = true;
+
+        int length = NAME_LENGTH;
+        for(int i=0; i<NAME_LENGTH; i++) {
+            if(bytes[i] == 0) {
+                length = i;
+                break;
+            }
+        }
+
+        byte[] nameBytes = new byte[length];
+
+        for(int i=0; i<length; i++) {
+            nameBytes[i] = bytes[i];
+        }
+
+        try {
+            setName(new String(nameBytes, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setDataBytes(byte[] bytes) {
+        if(bytes == null) {
+            return;
+        }
+        mIsDataInitialized = true;
+        int idx = 0;
+        setSteeringInverted(bytes[idx] != 0);
+        idx++;
+        setMaxSteeringAnglePositive((int)bytes[idx]);
+        idx++;
+        setMaxSteeringAngleNegative((int)bytes[idx]);
+        idx++;
+        setSteeringOffset((int)bytes[idx]);
+        idx++;
+        setHasMovingFrontLights(bytes[idx] != 0);
+        idx++;
+        setHasTrunk(bytes[idx] != 0);
+        idx++;
+        setCanBlink(bytes[idx] != 0);
+        idx++;
+    }
+
+    public static CarConfiguration fromDataBytes(byte[] bytes) {
         if(bytes == null) {
             return null;
         }
         CarConfiguration result = new CarConfiguration();
-        int idx = 0;
-        result.setSteeringInverted(bytes[idx] != 0);
-        idx++;
-        result.setMaxSteeringAnglePositive((int)bytes[idx]);
-        idx++;
-        result.setMaxSteeringAngleNegative((int)bytes[idx]);
-        idx++;
-        result.setSteeringOffset((int)bytes[idx]);
-        idx++;
-
-        byte[] nameBytes = new byte[NAME_LENGTH];
-        for(int i=0; i<NAME_LENGTH; i++) {
-            nameBytes[i] = bytes[idx + i];
-        }
-        idx += NAME_LENGTH;
-
-        try {
-            result.setName(new String(nameBytes, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        result.setHasMovingFrontLights(bytes[idx] != 0);
-        idx++;
-        result.setHasTrunk(bytes[idx] != 0);
-        idx++;
-        result.setCanBlink(bytes[idx] != 0);
-        idx++;
+        result.setDataBytes(bytes);
 
         return result;
     }

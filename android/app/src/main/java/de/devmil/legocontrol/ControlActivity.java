@@ -31,10 +31,11 @@ import java.util.Locale;
 import de.devmil.legologic.CarConfiguration;
 import de.devmil.legologic.CarHandler;
 import de.devmil.legologic.DirectionControl;
+import de.devmil.legologic.ICarHandlerDataListener;
 import de.devmil.legologic.ICarHandlerStateListener;
 import de.devmil.legologic.ValidationError;
 
-public class ControlActivity extends AppCompatActivity implements ICarHandlerStateListener {
+public class ControlActivity extends AppCompatActivity implements ICarHandlerStateListener, ICarHandlerDataListener {
 
     private static final String EXTRA_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
@@ -488,6 +489,16 @@ public class ControlActivity extends AppCompatActivity implements ICarHandlerSta
                     adaptSwitchVisibility();
                     adaptModelState();
                 }
+            }
+        });
+    }
+
+    @Override
+    public void carHandlerDataChanged() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setConfigurationValuesToView();
             }
         });
     }

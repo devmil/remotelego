@@ -5,7 +5,7 @@
 
 #include "ICarProfile.hpp"
 
-#define DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE 13 //so that the total amount of data is 20 (seems to be a limitation in the BLE stack)
+#define DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE 20 //so that the total amount of data is 20 (seems to be a limitation in the BLE stack)
 
 struct DynamicProfileData {
     bool invertSteering;
@@ -13,12 +13,15 @@ struct DynamicProfileData {
     int8_t maxAngleNegative;
     int8_t offsetAngle;
 
-    char name[DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE];
-
     bool hasMovingFrontLights;
     bool hasTrunk;
     bool canBlink;
 };
+
+struct DynamicProfileNameData {
+    uint8_t name[DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE];
+};
+
 
 class DynamicProfile : public virtual ICarProfile {
 public:
@@ -52,21 +55,28 @@ public:
 /**
 *  Dynamic profile members
 */
-    /**
-    *   \brief returns [true] when a restart is required, otherwise [false]   
-    */
-    bool setData(DynamicProfileData data);
+    void setData(DynamicProfileData data);
 
     DynamicProfileData getData();
 
     uint16_t getDataSize();
+
+    uint16_t getNameDataSize();
+    DynamicProfileNameData getNameData();
+    void setNameData(DynamicProfileNameData nameData);
 private:
     DynamicProfileData m_data;
+    DynamicProfileNameData m_nameData;
     int m_eepromOffset;
     std::vector<ICarProfileDataChangedListener*> m_listener;
 
     void load();
     void save();
+
+    void printDataToLog();
+
+    void setNameFromString(String name);
+    String getNameAsString();
 };
 
 #endif
