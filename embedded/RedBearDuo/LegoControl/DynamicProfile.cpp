@@ -152,20 +152,46 @@ void DynamicProfile::printDataToLog() {
 }
 
 void DynamicProfile::setNameFromString(String name) {
-    for(int i=0; i<DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE; i++) {
-        if(i < name.length()) {
-            m_nameData.name[i] = name.charAt(i);
+    name.getBytes(m_nameData.name, DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE);
+}
+
+//TODO: review (taken from the WebApp code)
+std::string stringFromBytes(uint8_t* bytes, int maxLen) {
+    std::string result = u8"";
+    int pos = 0;
+    uint8_t c = 0;
+
+    while(pos < maxLen) {
+        uint8_t c1 = bytes[pos++];
+        if(c1 < 128) {
+            result = result + (char)c1;
+        } else if(c1 > 191 && c1 < 224) {
+            uint8_t c2 = bytes[pos++];
+            char characterToAdd = (char)((c1 & 31) << 6 | c2 & 63);
+            result = result + characterToAdd;
+        } else if(c1 > 239 && c1 < 365) {
+            uint8_t c2 = bytes[pos++];
+            uint8_t c3 = bytes[pos++];
+            uint8_t c4 = bytes[pos++];
+            uint8_t u = ((c1 & 7) << 18 | (c2 & 63) << 12 | (c3 & 63) << 6 | c4 & 63) - 0x10000;
+
+            char char1ToAdd = 0xD800 + (u >> 10);
+            char char2ToAdd = 0xDC00 + (u & 1023);
+
+            result = result + char1ToAdd + char2ToAdd;
         } else {
-            m_nameData.name[i] = 0;
+            uint8_t c2 = bytes[pos++];
+            uint8_t c3 = bytes[pos++];
+
+            char charToAdd = (c1 & 15) << 12 | (c2 & 63) << 6 | c3 & 63;
+
+            result = result + charToAdd;
         }
     }
+    return result;
 }
 
 String DynamicProfile::getNameAsString() {
-    char tmpName[DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE + 1];
-    for(int i=0; i<DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE; i++) {
-        tmpName[i] = m_nameData.name[i];
-    }
-    tmpName[DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE] = 0;
-    return String(tmpName);
+    std::string tmpString = stringFromBytes(m_nameData.name, DYNAMIC_PROFILE_DATA_MAX_NAME_SIZE); 
+    return String(tmpString.c_str());
 }

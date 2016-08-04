@@ -113,8 +113,9 @@ public class CarConfiguration {
         }
 
         //3. mName length
-        if(mName.length() > NAME_LENGTH) {
-            result.add(new ValidationError(ValidationError.DataField.Name, String.format(Locale.getDefault(), "Name can only be %d characters long", NAME_LENGTH)));
+        byte[] nameBytes = toNameBytesRaw();
+        if(nameBytes == null || nameBytes.length > NAME_LENGTH) {
+            result.add(new ValidationError(ValidationError.DataField.Name, String.format(Locale.getDefault(), "Name can only be %d bytes long", NAME_LENGTH)));
         }
 
         return result;
@@ -138,22 +139,25 @@ public class CarConfiguration {
         return resultBytes;
     }
 
-    public byte[] toNameBytes() {
-        List<Byte> result = new ArrayList<>();
+    public byte[] toNameBytesRaw() {
+        try {
+            return mName.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+        }
+        return null;
+    }
+
+    public byte[] toNameBytesForSending() {
+        byte[] bytes = toNameBytesRaw();
+        byte[] result = new byte[NAME_LENGTH];
         for(int i=0; i<NAME_LENGTH; i++) {
-            if(mName.length() > i) {
-                result.add((byte) mName.charAt(i));
+            if(bytes.length > i) {
+                result[i] = bytes[i];
             } else {
-                result.add((byte)0);
+                result[i] = 0;
             }
         }
-
-        byte[] resultBytes = new byte[result.size()];
-        for(int i=0; i<result.size(); i++) {
-            resultBytes[i] = result.get(i);
-        }
-
-        return resultBytes;
+        return result;
     }
 
     public void setNameBytes(byte[] bytes) {
@@ -165,10 +169,13 @@ public class CarConfiguration {
 
         int length = NAME_LENGTH;
         for(int i=0; i<NAME_LENGTH; i++) {
-            if(bytes[i] == 0) {
+            if(bytes.length > i && bytes[i] == 0) {
                 length = i;
                 break;
             }
+        }
+        if(length > bytes.length) {
+            length = bytes.length;
         }
 
         byte[] nameBytes = new byte[length];

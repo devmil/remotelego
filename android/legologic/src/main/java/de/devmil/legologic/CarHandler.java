@@ -277,7 +277,7 @@ public class CarHandler extends BluetoothGattCallback {
         if(dataConfigurationCharacteristic.setValue(configuration.toDataBytes())) {
             tryWriteCharacteristic(mGatt, dataConfigurationCharacteristic);
         }
-        if(nameConfigurationCharacteristic.setValue(configuration.toNameBytes())) {
+        if(nameConfigurationCharacteristic.setValue(configuration.toNameBytesForSending())) {
             tryWriteCharacteristic(mGatt, nameConfigurationCharacteristic);
         }
     }
