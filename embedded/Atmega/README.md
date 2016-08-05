@@ -31,7 +31,7 @@ Open your favourite Terminal, go to the main directory and enter
 `make all` or `make rebuild`
 
 ## Flash
-Make sure you have connected the AVT flash USB device to the Mainboard and that you have powered it up. Please check the plug if the nose heads away from the mainboard (see picture)
+Make sure you have connected the AVR flash USB device to the Mainboard and that you have powered it up. Please check the plug if the nose heads away from the mainboard (see picture)
 Open your favourite Terminal, go to the main directory and enter
 
 `make flash`

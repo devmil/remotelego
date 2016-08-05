@@ -6,12 +6,12 @@ The RedBear duo is the brain of the car models. It contains all the car specific
 
 
 ## Preparation
-In order to flash the software to the RedBear duo you have to install the Arduino IDE, set up the correct RedBear blugin and flash the correct firmware to the DUO.
+In order to flash the software to the RedBear duo you have to install the Arduino IDE, set up the correct RedBear plugin and flash the correct firmware to the DUO.
 
 For a Getting Started guide that covers the installation of Arduino and the RedBear plugin refer to this web page: [https://github.com/redbear/Duo/blob/master/docs/getting_started_with_arduino_ide.md](https://github.com/redbear/Duo/blob/master/docs/getting_started_with_arduino_ide.md)
 
 Please make sure that you select the correct version of the plugin. The version the current code is tested with is mentioned in the LegoControl.ino file on the top.
-To isntall the correct firmware for the selected plugin version just use the Arduino mechanism mentioned in the Getting Started guide to flash the firmware.
+To install the correct firmware for the selected plugin version just use the Arduino mechanism mentioned in the Getting Started guide to flash the firmware.
 
 Additionally you need to install an stl port for Arduino as the lego car code uses standard types (shared_ptr, vector). There is a zip file containing the Arduino in the repository but you can just follow this guide to download and install the stl port:
 [https://github.com/vancegroup/stlport-avr/wiki](https://github.com/vancegroup/stlport-avr/wiki).
@@ -44,10 +44,8 @@ The LegoCarModel is the heart of the car. It contains all the business logic and
 This module encapsulates the communication with the BLW Nano. It basically sends the Eddystone URI to the BLE Nano (or better: ensures that the current URI is transmitted to the BLE Nano). It does so cyclic as the protocol isn't as strict as with the AVRCommunication so that the timeouts are smaller and therefore a immediate transmittion can't be guarantieed. This has been done to not disturb the AVR communication when there is a problem with the BLE Nano communication (e.g. when the module is missing)
 
 8. Profiles
-Each car model has its own specifics. These specifics are provided by instances of "ICarProfile". Each car model that we have controlled using this mechanism already has a profile. For the code to compile you have to choose a profile (or create your own).
-Some of the specifics are: 
- - maximum steering angle
- - steering offset
- - steering inverted?
- - Available features
+The behavior and the special characteristics the car has are represented by its profile.
+The profile has to be set once per car. This can be done by sending the configuration data via two special Bluetooth characteristics.
+Currently the Android App is able to handle setting the car up. So the easiest way of making the initial configuration for your car is to power it up, connect the Android app to it and hit the settings button. There you can choose each parameter for the configuration (like steering offset, device name, supported features, ...) and send the configuration to the RedBear DUO.
+The configuration then gets persisted in the EEPROM for the DUO so the data has only to be sent once.
 
