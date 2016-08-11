@@ -43,10 +43,10 @@ void BluetoothCharacteristic::init() {
     m_data = std::vector<uint8_t>(getDataSize());
 }
 
-int BluetoothCharacteristic::write(std::vector<uint8_t> data) {
+bool BluetoothCharacteristic::write(std::vector<uint8_t> data) {
     int count = data.size();
     onWrite(data);
-    return count;   
+    return true;   
 }
 
 std::vector<uint8_t> BluetoothCharacteristic::read() {
@@ -281,7 +281,11 @@ int Bluetooth::onDataWrite(uint16_t value_handle, uint8_t *buffer, uint16_t size
             for(int i=0; i<size; i++) {
                 data.push_back(buffer[i]);
             }
-            return characteristic->write(data);
+            if(characteristic->write(data)) {
+              return 0;
+            } else {
+              return 1;
+            }
         }
     }    
     return 0;

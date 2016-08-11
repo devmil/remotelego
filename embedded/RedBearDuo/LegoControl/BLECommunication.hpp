@@ -16,7 +16,7 @@ public:
       m_model(model){
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
@@ -46,7 +46,7 @@ public:
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
@@ -76,7 +76,7 @@ public:
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
@@ -106,7 +106,7 @@ public:
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
@@ -136,7 +136,7 @@ public:
       m_model(model) {
     }
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+      return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
     }
     virtual uint16_t getDataSize() {
       return 1;
@@ -166,7 +166,7 @@ public:
     m_dynamicProfile(dynamicProfile) {
   }
   virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
   }
   virtual uint16_t getDataSize() {
     return m_dynamicProfile->getDataSize();
@@ -205,7 +205,7 @@ public:
     m_dynamicProfile(dynamicProfile) {
   }
   virtual std::vector<BluetoothCharacteristicProperty> getProperties() {
-    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write, BluetoothCharacteristicProperty::WriteWithoutResponse };
+    return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
   }
   virtual uint16_t getDataSize() {
     return m_dynamicProfile->getNameDataSize();

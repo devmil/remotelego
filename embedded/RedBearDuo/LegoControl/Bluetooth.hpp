@@ -26,7 +26,7 @@ public:
     std::vector<uint8_t>& getDataRef();
     std::vector<uint8_t>& getUUIDDataRef();
     
-    virtual int write(std::vector<uint8_t> data);
+    virtual bool write(std::vector<uint8_t> data);
     virtual std::vector<uint8_t> read();
     
     virtual std::vector<BluetoothCharacteristicProperty> getProperties() = 0;
