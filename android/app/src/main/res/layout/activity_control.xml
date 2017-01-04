@@ -179,7 +179,7 @@
                     android:labelFor="@+id/activity_control_settings_editSteeringMaxAngleNegative"/>
                 <EditText
                     android:id="@id/activity_control_settings_editSteeringMaxAngleNegative"
-                    android:inputType="number"
+                    android:inputType="numberSigned"
                     android:maxLines="1"
                     />
             </TableRow>
@@ -192,7 +192,7 @@
                     android:labelFor="@+id/activity_control_settings_editSteeringOffset"/>
                 <EditText
                     android:id="@id/activity_control_settings_editSteeringOffset"
-                    android:inputType="number"
+                    android:inputType="numberSigned"
                     android:maxLines="1"
                     />
             </TableRow>

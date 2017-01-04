@@ -126,7 +126,7 @@ ConfigurationCharacteristic::ConfigurationCharacteristic(DynamicProfile* dynamic
   m_dynamicProfile(dynamicProfile) {
 }
 std::vector<BluetoothCharacteristicProperty> ConfigurationCharacteristic::getProperties() {
-  return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
+  return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write };
 }
 uint16_t ConfigurationCharacteristic::getDataSize() {
   return m_dynamicProfile->getDataSize();
@@ -159,7 +159,7 @@ NameConfigurationCharacteristic::NameConfigurationCharacteristic(DynamicProfile*
   m_dynamicProfile(dynamicProfile) {
 }
 std::vector<BluetoothCharacteristicProperty> NameConfigurationCharacteristic::getProperties() {
-  return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::WriteWithoutResponse };
+  return { BluetoothCharacteristicProperty::Read, BluetoothCharacteristicProperty::Write };
 }
 uint16_t NameConfigurationCharacteristic::getDataSize() {
   return m_dynamicProfile->getNameDataSize();
